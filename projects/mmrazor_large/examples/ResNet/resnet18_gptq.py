@@ -91,8 +91,7 @@ def eval(model: nn.Module,
             _, predicted = outputs.max(1)
             correct += (y == predicted).long().sum()
             total += y.numel()
-    acc = correct / total
-    return acc
+    return correct / total
 
 
 @torch.no_grad()

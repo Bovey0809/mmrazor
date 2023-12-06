@@ -25,7 +25,7 @@ class OneShotMutableChannel(SquentialMutableChannel):
         super().__init__(num_channels, choice_mode, **kwargs)
         candidate_choices.sort()
         self.candidate_choices = candidate_choices
-        if candidate_choices == []:
+        if not candidate_choices:
             candidate_choices.append(num_channels if self.is_num_mode else 1.0)
 
     @property

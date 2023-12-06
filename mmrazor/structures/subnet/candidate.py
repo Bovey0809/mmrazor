@@ -57,7 +57,7 @@ class Candidates(UserList):
 
     def resources(self, key_indicator: str = 'flops') -> List[float]:
         """The resources of candidates."""
-        assert key_indicator in ['flops', 'params', 'latency']
+        assert key_indicator in {'flops', 'params', 'latency'}
         return [
             value.get(key_indicator, 0.) for item in self.data
             for _, value in item.items()
@@ -68,19 +68,18 @@ class Candidates(UserList):
         """The subnets of candidates."""
         import copy
         assert len(self.data) > 0, ('Got empty candidates.')
-        if 'value_subnet' in self.data[0]:
-            subnets = []
-            for data in self.data:
-                subnet = dict()
-                _data = copy.deepcopy(data)
-                for k1 in ['value_subnet', 'channel_subnet']:
-                    for k2 in self._indicators:
-                        _data[k1].pop(k2)
-                    subnet[k1] = _data[k1]
-                subnets.append(subnet)
-            return subnets
-        else:
+        if 'value_subnet' not in self.data[0]:
             return [eval(key) for item in self.data for key, _ in item.items()]
+        subnets = []
+        for data in self.data:
+            subnet = dict()
+            _data = copy.deepcopy(data)
+            for k1 in ['value_subnet', 'channel_subnet']:
+                for k2 in self._indicators:
+                    _data[k1].pop(k2)
+                subnet[k1] = _data[k1]
+            subnets.append(subnet)
+        return subnets
 
     def _format(self, data: _format_input) -> _format_return:
         """Transform [Dict, ...] to Union[Dict[str, Dict], List[Dict[str,
@@ -157,7 +156,7 @@ class Candidates(UserList):
                      resources: float,
                      key_indicator: str = 'flops') -> None:
         """Set resources to the specified subnet by index."""
-        assert key_indicator in ['score', 'flops', 'params', 'latency']
+        assert key_indicator in {'score', 'flops', 'params', 'latency'}
         for _, value in self.data[i].items():
             value[key_indicator] = resources
 

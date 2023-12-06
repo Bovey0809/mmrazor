@@ -29,7 +29,7 @@ def replace_with_dynamic_ops(model: nn.Module,
                 if a_qconfig:
                     a_fakequant = Quantizer()
                     a_fakequant.configure(**a_qconfig)
-                    kwargs.update({'a_fakequant': a_fakequant})
+                    kwargs['a_fakequant'] = a_fakequant
                 new_module = dynamicop_map[type(module)].convert_from(
                     module, **kwargs)
             else:

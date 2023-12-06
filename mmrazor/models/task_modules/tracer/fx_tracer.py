@@ -62,10 +62,13 @@ class AutoWrapper:
     def wrap(self, owner, name, val):
 
         def is_method(val):
-            return (inspect.ismethod(val) or inspect.isfunction(val)
-                    or isinstance(val, types.BuiltinFunctionType)
-                    or isinstance(val, staticmethod)
-                    or isinstance(val, classmethod))
+            return (
+                inspect.ismethod(val)
+                or inspect.isfunction(val)
+                or isinstance(
+                    val, (types.BuiltinFunctionType, staticmethod, classmethod)
+                )
+            )
 
         if owner is None and isinstance(val, dict):
             self.wrap_frame(owner, name, val)
@@ -94,7 +97,7 @@ class AutoWrapper:
         assert isinstance(val, dict)
 
         if self.patcher.visit_once(val):
-            frame_name = val['__name__'] if '__name__' in val else ''
+            frame_name = val.get('__name__', '')
             logger.debug(f'wrap a frame {frame_name}')
             for key in val:
                 self.wrap(val, key, val[key])
@@ -125,10 +128,8 @@ class AutoWrapper:
         if self.visit_once(val):
             try:
                 if isinstance(val, staticmethod):
-                    pass
                     logger.debug(f'wrap a staticmethod {name} (unimplement)')
                 elif isinstance(val, classmethod):
-                    pass
                     logger.debug(f'wrap a classmethod {name} (unimplement)')
                 else:
                     self.patcher.patch_method(owner, name,
@@ -326,8 +327,7 @@ class FxTracer(Tracer):
 
     def create_arg(self, a: Any) -> 'Argument':
         try:
-            arg = super().create_arg(a)
-            return arg
+            return super().create_arg(a)
         except Exception:
             return a
 
@@ -350,10 +350,5 @@ class MMFxTracer(FxTracer):
                        module_qualified_name: str) -> bool:
         is_torch_module = super().is_leaf_module(m, module_qualified_name)
 
-        is_leaf = False
-        for module_type in self.leaf_module:
-            if isinstance(m, module_type):
-                is_leaf = True
-                break
-
+        is_leaf = any(isinstance(m, module_type) for module_type in self.leaf_module)
         return is_leaf or is_torch_module

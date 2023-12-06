@@ -104,10 +104,12 @@ class DKDLoss(nn.Module):
         preds_T: torch.Tensor,
     ) -> torch.Tensor:
         """Calculate the KL Divergence."""
-        kl_loss = F.kl_div(
-            preds_S, preds_T, size_average=False,
-            reduction=self.reduction) * self.tau**2
-        return kl_loss
+        return (
+            F.kl_div(
+                preds_S, preds_T, size_average=False, reduction=self.reduction
+            )
+            * self.tau**2
+        )
 
     def _cat_mask(
         self,

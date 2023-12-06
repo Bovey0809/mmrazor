@@ -113,7 +113,7 @@ class ChannelGraph(ModuleGraph[ChannelNode]):
         """Generate a ChanneelTensor and let it forwards through the graph."""
         for node in self.topo_traverse():
             node.reset_channel_tensors()
-        for i, node in enumerate(self.topo_traverse()):
+        for node in self.topo_traverse():
             node: ChannelNode
             if len(node.prev_nodes) == 0:
                 tensor = ChannelTensor(num_input_channel)
@@ -159,8 +159,7 @@ class ChannelGraph(ModuleGraph[ChannelNode]):
         """Union all nodes with the same module to the same unit."""
         module2node: Dict[Module, List[ChannelNode]] = dict()
         for node in self:
-            if isinstance(node.val,
-                          Module) and len(list(node.val.parameters())) > 0:
+            if isinstance(node.val, Module) and list(node.val.parameters()):
                 if node.val not in module2node:
                     module2node[node.val] = []
                 if node not in module2node[node.val]:
@@ -170,7 +169,7 @@ class ChannelGraph(ModuleGraph[ChannelNode]):
             if len(module2node[module]) > 1:
                 nodes = module2node[module]
                 assert nodes[0].in_channel_tensor is not None and \
-                    nodes[0].out_channel_tensor is not None
+                        nodes[0].out_channel_tensor is not None
                 for node in nodes[1:]:
                     nodes[0].in_channel_tensor.union(node.in_channel_tensor)
                     nodes[0].out_channel_tensor.union(node.out_channel_tensor)
@@ -215,25 +214,24 @@ class ChannelGraph(ModuleGraph[ChannelNode]):
         except Exception as e:
             if not fix:
                 raise e
-            else:
-                try:
-                    raise e
-                except NoOutputError as e:
-                    print_log(f'add a output after {node}, error: {e}',
-                              'debug')
-                    self._add_output_after(node)
-                except NoInputError as e:
-                    print_log(
-                        f'add a input before {node}, error: {e}',
-                        level='debug')
-                    self._add_input_before(node)
-                except ChannelDismatchError as e:
-                    print_log((f'{node} has channel error, so'
-                               f'we convert it to a EndNode. error: {e}'),
-                              level='debug')
-                    self._convert_a_node_to_end_node(node)
+            try:
+                raise e
+            except NoOutputError as e:
+                print_log(f'add a output after {node}, error: {e}',
+                          'debug')
+                self._add_output_after(node)
+            except NoInputError as e:
+                print_log(
+                    f'add a input before {node}, error: {e}',
+                    level='debug')
+                self._add_input_before(node)
+            except ChannelDismatchError as e:
+                print_log((f'{node} has channel error, so'
+                           f'we convert it to a EndNode. error: {e}'),
+                          level='debug')
+                self._convert_a_node_to_end_node(node)
 
-                self._check(node, fix=True)
+            self._check(node, fix=True)
 
     def _reset_channel_elem_cache(self):
         """Reset hash cache of ChannelTensors."""

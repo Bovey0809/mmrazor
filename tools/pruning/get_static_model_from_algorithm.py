@@ -26,8 +26,7 @@ def parse_args():
         type=str,
         default='',
         help='output path to store the pruned checkpoint.')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def get_save_path(config_path, checkpoint_path, target_path):
@@ -73,10 +72,13 @@ if __name__ == '__main__':
     pruned_model, structure = get_static_model(model)
 
     # save
-    torch.save(pruned_model.state_dict(),
-               os.path.join(work_dir, checkpoint_name + '.pth'))
+    torch.save(
+        pruned_model.state_dict(),
+        os.path.join(work_dir, f'{checkpoint_name}.pth'),
+    )
     fileio.dump(
-        structure, os.path.join(work_dir, checkpoint_name + '.json'), indent=4)
+        structure, os.path.join(work_dir, f'{checkpoint_name}.json'), indent=4
+    )
 
-    print_log('Save pruned model to {}'.format(work_dir))
+    print_log(f'Save pruned model to {work_dir}')
     print_log('Pruning Structure: {}'.format(json.dumps(structure, indent=4)))

@@ -62,11 +62,10 @@ class DiffMutableModule(MutableModule):
         """
         if self.is_fixed:
             return self.forward_fixed(x)
+        if arch_param is None:
+            return self.forward_all(x)
         else:
-            if arch_param is None:
-                return self.forward_all(x)
-            else:
-                return self.forward_arch_param(x, arch_param=arch_param)
+            return self.forward_arch_param(x, arch_param=arch_param)
 
     def compute_arch_probs(self, arch_param: nn.Parameter) -> Tensor:
         """compute chosen probs according to architecture params."""
@@ -117,9 +116,9 @@ class DiffMutableOP(DiffMutableModule):
     ) -> None:
         super().__init__(
             module_kwargs=module_kwargs, alias=alias, init_cfg=init_cfg)
-        assert len(candidates) >= 1, \
-            f'Number of candidate op must greater than or equal to 1, ' \
-            f'but got: {len(candidates)}'
+        assert (
+            candidates
+        ), f'Number of candidate op must greater than or equal to 1, but got: {len(candidates)}'
 
         self._is_fixed = False
         if fix_threshold < 0 or fix_threshold > 1.0:
@@ -181,12 +180,11 @@ class DiffMutableOP(DiffMutableModule):
         # compute the probs of choice
         probs = self.compute_arch_probs(arch_param=arch_param)
 
-        # forward based on probs
-        outputs = list()
-        for prob, module in zip(probs, self._candidates.values()):
-            if prob > 0.:
-                outputs.append(prob * module(x))
-
+        outputs = [
+            prob * module(x)
+            for prob, module in zip(probs, self._candidates.values())
+            if prob > 0.0
+        ]
         return sum(outputs)
 
     def forward_all(self, x) -> Tensor:
@@ -199,9 +197,7 @@ class DiffMutableOP(DiffMutableModule):
         Returns:
             Tensor: the result of forward all of the ``choice`` operation.
         """
-        outputs = list()
-        for op in self._candidates.values():
-            outputs.append(op(x))
+        outputs = [op(x) for op in self._candidates.values()]
         return sum(outputs)
 
     def fix_chosen(self, chosen: Union[str, List[str]]) -> None:
@@ -312,9 +308,9 @@ class OneHotMutableOP(DiffMutableOP):
         if not self.is_fixed:
             self.arch_weights = self.sample_weights(arch_param, probs)
             sorted_param = torch.topk(probs, 2)
-            index = (
-                sorted_param[0][0] - sorted_param[0][1] >= self.fix_threshold)
-            if index:
+            if index := (
+                sorted_param[0][0] - sorted_param[0][1] >= self.fix_threshold
+            ):
                 self.fix_chosen(self.choices[index])
 
         if self.is_fixed:
@@ -323,12 +319,11 @@ class OneHotMutableOP(DiffMutableOP):
             self.arch_weights.data[index].fill_(1.0)
         self.arch_weights.requires_grad_()
 
-        # forward based on self.arch_weights
-        outputs = list()
-        for prob, module in zip(self.arch_weights, self._candidates.values()):
-            if prob > 0.:
-                outputs.append(prob * module(x))
-
+        outputs = [
+            prob * module(x)
+            for prob, module in zip(self.arch_weights, self._candidates.values())
+            if prob > 0.0
+        ]
         return sum(outputs)
 
 
@@ -416,11 +411,10 @@ class DiffChoiceRoute(DiffMutableModule):
         """
         if self.is_fixed:
             return self.forward_fixed(x)
+        if arch_param is not None and self._with_arch_param:
+            return self.forward_arch_param(x, arch_param=arch_param)
         else:
-            if arch_param is not None and self._with_arch_param:
-                return self.forward_arch_param(x, arch_param=arch_param)
-            else:
-                return self.forward_all(x)
+            return self.forward_all(x)
 
     def forward_fixed(self, inputs: Union[List, Tuple]) -> Tensor:
         """Forward when the mutable is in `fixed` mode.
@@ -434,12 +428,13 @@ class DiffChoiceRoute(DiffMutableModule):
             Tensor: the result of forward the fixed operation.
         """
         assert self._chosen is not None, \
-            'Please call fix_chosen before calling `forward_fixed`.'
+                'Please call fix_chosen before calling `forward_fixed`.'
 
-        outputs = list()
-        for choice, x in zip(self._unfixed_choices, inputs):
-            if choice in self._chosen:
-                outputs.append(self._candidates[choice](x))
+        outputs = [
+            self._candidates[choice](x)
+            for choice, x in zip(self._unfixed_choices, inputs)
+            if choice in self._chosen
+        ]
         return sum(outputs)
 
     def forward_arch_param(self, x, arch_param: nn.Parameter) -> Tensor:
@@ -455,17 +450,16 @@ class DiffChoiceRoute(DiffMutableModule):
             Tensor: the result of forward with ``arch_param``.
         """
         assert len(x) == len(self._candidates), \
-            f'Length of `edges` {len(self._candidates)} should be ' \
-            f'same as the length of inputs {len(x)}.'
+                f'Length of `edges` {len(self._candidates)} should be ' \
+                f'same as the length of inputs {len(x)}.'
 
         probs = self.compute_arch_probs(arch_param=arch_param)
 
-        outputs = list()
-        for prob, module, input in zip(probs, self._candidates.values(), x):
-            if prob > 0:
-                # prob may equal to 0 in gumbel softmax.
-                outputs.append(prob * module(input))
-
+        outputs = [
+            prob * module(input)
+            for prob, module, input in zip(probs, self._candidates.values(), x)
+            if prob > 0
+        ]
         return sum(outputs)
 
     def forward_all(self, x):
@@ -479,13 +473,10 @@ class DiffChoiceRoute(DiffMutableModule):
             Tensor: the result of forward all of the ``choice`` operation.
         """
         assert len(x) == len(self._candidates), \
-            f'Lenght of edges {len(self._candidates)} should be same as ' \
-            f'the length of inputs {len(x)}.'
+                f'Lenght of edges {len(self._candidates)} should be same as ' \
+                f'the length of inputs {len(x)}.'
 
-        outputs = list()
-        for op, input in zip(self._candidates.values(), x):
-            outputs.append(op(input))
-
+        outputs = [op(input) for op, input in zip(self._candidates.values(), x)]
         return sum(outputs)
 
     def fix_chosen(self, chosen: List[str]) -> None:
@@ -528,8 +519,7 @@ class DiffChoiceRoute(DiffMutableModule):
         """sample choice based on `arch_param`."""
         sort_idx = torch.argsort(-arch_param).cpu().numpy().tolist()
         choice_idx = sort_idx[:self.num_chosen]
-        choice = [self.choices[i] for i in choice_idx]
-        return choice
+        return [self.choices[i] for i in choice_idx]
 
 
 @MODELS.register_module()

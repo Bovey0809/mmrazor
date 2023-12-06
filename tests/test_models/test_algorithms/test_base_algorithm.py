@@ -14,10 +14,7 @@ from mmrazor.registry import MODELS
 class CustomDataPreprocessor(BaseDataPreprocessor):
 
     def forward(self, data, training=False):
-        if training:
-            return 1
-        else:
-            return 2
+        return 1 if training else 2
 
 
 @MODELS.register_module()
@@ -34,11 +31,9 @@ class ToyModel(BaseModel):
             out = self.relu(self.bn(self.conv(batch_inputs)))
             return dict(loss=out)
         elif mode == 'predict':
-            out = self.relu(self.bn(self.conv(batch_inputs) + 1))
-            return out
+            return self.relu(self.bn(self.conv(batch_inputs) + 1))
         elif mode == 'tensor':
-            out = self.relu(self.bn(self.conv(batch_inputs) + 2))
-            return out
+            return self.relu(self.bn(self.conv(batch_inputs) + 2))
 
 
 class TestBaseAlgorithm(TestCase):

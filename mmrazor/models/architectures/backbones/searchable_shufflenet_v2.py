@@ -105,7 +105,6 @@ class SearchableShuffleNetV2(BaseBackbone):
         self.norm_eval = norm_eval
         self.with_cp = with_cp
 
-        last_channels = 1024
         self.in_channels = 16 * stem_multiplier
         self.conv1 = ConvModule(
             in_channels=3,
@@ -125,6 +124,7 @@ class SearchableShuffleNetV2(BaseBackbone):
             self.layers.append(layer)
 
         if with_last_layer:
+            last_channels = 1024
             self.layers.append(
                 ConvModule(
                     in_channels=self.in_channels,

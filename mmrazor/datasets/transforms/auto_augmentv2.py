@@ -10,7 +10,7 @@ from PIL import Image, ImageEnhance, ImageOps
 
 from mmrazor.registry import TRANSFORMS
 
-_PIL_VER = tuple([int(x) for x in PIL.__version__.split('.')[:2]])
+_PIL_VER = tuple(int(x) for x in PIL.__version__.split('.')[:2])
 
 _FILL = (128, 128, 128)
 
@@ -40,12 +40,10 @@ class AutoAugmentOp(object):
         self.magnitude_std = 0.5
 
         self.kwargs = {
-            'fillcolor':
-            extra_params['img_mean']
-            if 'img_mean' in extra_params else _FILL,  # noqa: E501
-            'resample':
-            extra_params['interpolation'] if 'interpolation' in extra_params
-            else _interpolation_name_to_pil.values()  # noqa: E501,E131
+            'fillcolor': extra_params.get('img_mean', _FILL),
+            'resample': extra_params['interpolation']
+            if 'interpolation' in extra_params
+            else _interpolation_name_to_pil.values(),
         }
         self._get_magnitude()
 

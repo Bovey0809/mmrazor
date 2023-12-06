@@ -102,9 +102,8 @@ def _test_a_model(Model, tracer_type='fx'):
     except Exception as e:
         if DEBUG:
             raise e
-        else:
-            print(f'test {Model} failed.')
-            return Model.name, False, f'{e}', time.time() - start, -1
+        print(f'test {Model} failed.')
+        return Model.name, False, f'{e}', time.time() - start, -1
 
 
 # TestCase
@@ -175,13 +174,13 @@ class TestTraceModel(TestCase):
             print(f'\t{model}')
 
         # short summary
-        short_passed = set(
-            [ModelGenerator.get_short_name(res[0]) for res in passd_test])
+        short_passed = {ModelGenerator.get_short_name(res[0]) for res in passd_test}
 
-        short_unpassed = set(
-            [ModelGenerator.get_short_name(res[0]) for res in unpassd_test])
+        short_unpassed = {
+            ModelGenerator.get_short_name(res[0]) for res in unpassd_test
+        }
 
-        short_untest = set([model.short_name for model in untest_models])
+        short_untest = {model.short_name for model in untest_models}
 
         for name in short_unpassed:
             if name in short_passed:

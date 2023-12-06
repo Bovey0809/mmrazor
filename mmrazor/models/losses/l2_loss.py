@@ -56,11 +56,10 @@ class L2Loss(nn.Module):
         # Calculate l2_loss as dist.
         if self.dist:
             loss = torch.sqrt(loss)
+        elif self.div_element:
+            loss = loss / s_feature.numel()
         else:
-            if self.div_element:
-                loss = loss / s_feature.numel()
-            else:
-                loss = loss / s_feature.size(0)
+            loss = loss / s_feature.size(0)
 
         return self.loss_weight * loss
 

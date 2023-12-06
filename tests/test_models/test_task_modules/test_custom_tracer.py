@@ -87,12 +87,12 @@ class testCustomTracer(TestCase):
         # init with skipped_methods(list)
         UntracedMethodRegistry.method_dict = dict()
         tracer = CustomTracer(skipped_methods=self.skipped_methods)
-        assert '_get_loss' in UntracedMethodRegistry.method_dict.keys()
-        assert '_get_predictions' in UntracedMethodRegistry.method_dict.keys()
+        assert '_get_loss' in UntracedMethodRegistry.method_dict
+        assert '_get_predictions' in UntracedMethodRegistry.method_dict
         # init with skipped_methods(str)
         UntracedMethodRegistry.method_dict = dict()
         tracer = CustomTracer(skipped_methods=self.skipped_methods[0])
-        assert '_get_loss' in UntracedMethodRegistry.method_dict.keys()
+        assert '_get_loss' in UntracedMethodRegistry.method_dict
         # init with skipped_methods(int, error)
         with self.assertRaises(TypeError):
             CustomTracer(skipped_methods=123)
@@ -113,15 +113,15 @@ class testCustomTracer(TestCase):
         graph_predict = tracer.trace(model, concrete_args={'mode': 'predict'})
         assert isinstance(graph_tensor, Graph)
         assert isinstance(graph_loss, Graph)
-        skip_flag_loss = False
-        for node in graph_loss.nodes:
-            if node.op == 'call_method' and node.target == '_get_loss':
-                skip_flag_loss = True
+        skip_flag_loss = any(
+            node.op == 'call_method' and node.target == '_get_loss'
+            for node in graph_loss.nodes
+        )
         assert isinstance(graph_predict, Graph)
-        skip_flag_predict = False
-        for node in graph_predict.nodes:
-            if node.op == 'call_method' and node.target == '_get_predictions':
-                skip_flag_predict = True
+        skip_flag_predict = any(
+            node.op == 'call_method' and node.target == '_get_predictions'
+            for node in graph_predict.nodes
+        )
         assert skip_flag_loss and skip_flag_predict
 
         # test trace with skipped_module_names
@@ -142,10 +142,10 @@ class testCustomTracer(TestCase):
         tracer = CustomTracer(
             skipped_module_classes=self.skipped_module_classes)
         graph_tensor = tracer.trace(model, concrete_args={'mode': 'tensor'})
-        skip_flag = False
-        for node in graph_tensor.nodes:
-            if node.op == 'call_module' and node.target == 'backbone.layer1':
-                skip_flag = True
+        skip_flag = any(
+            node.op == 'call_module' and node.target == 'backbone.layer1'
+            for node in graph_tensor.nodes
+        )
         assert skip_flag
 
 

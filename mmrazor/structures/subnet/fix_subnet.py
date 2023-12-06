@@ -153,22 +153,21 @@ def export_fix_subnet(
         raise ValueError(f'Invalid export_subnet_mode {export_subnet_mode}, '
                          'only mutable or mutator is supported.')
 
-    if slice_weight:
-        # export subnet ckpt
-        from mmrazor.models.mutators import ChannelMutator
-
-        copied_model = copy.deepcopy(model)
-        if hasattr(model, 'mutator') and \
-                isinstance(model.mutator, ChannelMutator):
-            _dynamic_to_static(copied_model)
-        else:
-            load_fix_subnet(copied_model, fix_subnet)
-
-        if next(copied_model.parameters()).is_cuda:
-            copied_model.cuda()
-        return fix_subnet, copied_model
-    else:
+    if not slice_weight:
         return fix_subnet, None
+    # export subnet ckpt
+    from mmrazor.models.mutators import ChannelMutator
+
+    copied_model = copy.deepcopy(model)
+    if hasattr(model, 'mutator') and \
+            isinstance(model.mutator, ChannelMutator):
+        _dynamic_to_static(copied_model)
+    else:
+        load_fix_subnet(copied_model, fix_subnet)
+
+    if next(copied_model.parameters()).is_cuda:
+        copied_model.cuda()
+    return fix_subnet, copied_model
 
 
 def _export_subnet_by_mutable(model: nn.Module) -> Dict:
@@ -200,10 +199,9 @@ def _export_subnet_by_mutator(model: nn.Module, export_channel: bool) -> Dict:
     if not hasattr(model, 'mutator'):
         raise ValueError('model should contain `mutator` attribute, but got '
                          f'{type(model)} model')
-    fix_subnet = model.mutator.config_template(
-        with_channels=export_channel, with_unit_init_args=True)
-
-    return fix_subnet
+    return model.mutator.config_template(
+        with_channels=export_channel, with_unit_init_args=True
+    )
 
 
 def convert_fix_subnet(fix_subnet: Dict[str, DumpChosen]):

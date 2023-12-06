@@ -82,12 +82,10 @@ class BaseGraph(Generic[BASENODE]):
             node_converter (Callable): a function that converts node,
             when coping graph.
         """
-        old2new = {}
         new_graph = cls()
-        # copy nodes
-        for old in graph:
-            old2new[old] = new_graph.add_or_find_node(node_converter(old))
-
+        old2new = {
+            old: new_graph.add_or_find_node(node_converter(old)) for old in graph
+        }
         # connect
         for old in graph:
             for pre in old.prev_nodes:
@@ -105,9 +103,8 @@ class BaseGraph(Generic[BASENODE]):
         find = self.find_node(node)
         if find is not None:
             return find
-        else:
-            self.add_node(node)
-            return node
+        self.add_node(node)
+        return node
 
     def find_node(self, node: BaseNode):
         """Find a node and return."""
@@ -179,8 +176,7 @@ class BaseGraph(Generic[BASENODE]):
 
     def __iter__(self) -> Iterator[BASENODE]:
         """Traverse all nodes in the graph."""
-        for x in self.nodes.values():
-            yield x
+        yield from self.nodes.values()
 
     def __contains__(self, node: BASENODE) -> bool:
         """Check if a node is contained in the graph."""

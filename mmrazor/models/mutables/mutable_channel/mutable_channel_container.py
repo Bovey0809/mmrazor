@@ -39,13 +39,12 @@ class MutableChannelContainer(BaseMutableChannel):
         """Get current choices."""
         if len(self.mutable_channels) == 0:
             return torch.ones([self.num_channels]).bool()
-        else:
-            self._fill_unregistered_range()
-            self._assert_mutables_valid()
-            mutable_channels = list(self.mutable_channels.values())
-            masks = [mutable.current_mask for mutable in mutable_channels]
-            mask = torch.cat(masks)
-            return mask.bool()
+        self._fill_unregistered_range()
+        self._assert_mutables_valid()
+        mutable_channels = list(self.mutable_channels.values())
+        masks = [mutable.current_mask for mutable in mutable_channels]
+        mask = torch.cat(masks)
+        return mask.bool()
 
     @current_choice.setter
     def current_choice(self, choice):

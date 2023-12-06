@@ -35,10 +35,10 @@ def _check_valid_source(source):
 
 def str2class(str_inputs):
     clss = []
-    if not isinstance(str_inputs, tuple) and not isinstance(str_inputs, list):
-        str_inputs_list = [str_inputs]
-    else:
+    if isinstance(str_inputs, (tuple, list)):
         str_inputs_list = str_inputs
+    else:
+        str_inputs_list = [str_inputs]
     for s_class in str_inputs_list:
         _check_valid_source(s_class)
         mod_str = '.'.join(s_class.split('.')[:-1])

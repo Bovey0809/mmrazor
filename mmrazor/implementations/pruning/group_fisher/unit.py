@@ -39,7 +39,7 @@ class GroupFisherChannelUnit(L1MutableChannelUnit):
         self.normalized_fisher_info: torch.Tensor
 
         self.hook_handles: List = []
-        assert normalization_type in ['flops', 'act', 'none']
+        assert normalization_type in {'flops', 'act', 'none'}
         self.delta_type = normalization_type
 
         self.mutate_linear = mutate_linear
@@ -66,13 +66,12 @@ class GroupFisherChannelUnit(L1MutableChannelUnit):
     # prune
     def try_to_prune_min_channel(self) -> bool:
         """Prune the channel with the minimum value of fisher information."""
-        if self.mutable_channel.activated_channels > 1:
-            imp = self.importance()
-            index = imp.argmin()
-            self.mutable_channel.mask.scatter_(0, index, 0.0)
-            return True
-        else:
+        if self.mutable_channel.activated_channels <= 1:
             return False
+        imp = self.importance()
+        index = imp.argmin()
+        self.mutable_channel.mask.scatter_(0, index, 0.0)
+        return True
 
     @property
     def is_mutable(self) -> bool:
@@ -80,12 +79,10 @@ class GroupFisherChannelUnit(L1MutableChannelUnit):
         mutable = super().is_mutable
         if self.mutate_linear:
             return mutable
-        else:
-            has_linear = False
-            for layer in self.input_related:
-                if isinstance(layer.module, nn.Linear):
-                    has_linear = True
-            return mutable and (not has_linear)
+        has_linear = any(
+            isinstance(layer.module, nn.Linear) for layer in self.input_related
+        )
+        return mutable and (not has_linear)
 
     @property
     def input_related_dynamic_ops(self):
@@ -101,10 +98,8 @@ class GroupFisherChannelUnit(L1MutableChannelUnit):
 
     @property
     def dynamic_ops(self):
-        for module in self.input_related_dynamic_ops:
-            yield module
-        for module in self.output_related_dynamic_ops:
-            yield module
+        yield from self.input_related_dynamic_ops
+        yield from self.output_related_dynamic_ops
 
     # fisher information recorded
 
@@ -205,18 +200,17 @@ class GroupFisherChannelUnit(L1MutableChannelUnit):
             delta_memory = self._delta_memory_of_a_channel
             assert delta_memory > 0
             fisher = fisher / (float(delta_memory) / 1e6)
-        elif delta_type == 'none':
-            pass
-        else:
+        elif delta_type != 'none':
             raise NotImplementedError(delta_type)
         return fisher
 
     @property
     def _delta_flop_of_a_channel(self) -> torch.Tensor:
         """Calculate the flops of a channel."""
-        delta_flop = 0
-        for module in self.output_related_dynamic_ops:
-            delta_flop += module.delta_flop_of_a_out_channel
+        delta_flop = sum(
+            module.delta_flop_of_a_out_channel
+            for module in self.output_related_dynamic_ops
+        )
         for module in self.input_related_dynamic_ops:
             delta_flop += module.delta_flop_of_a_in_channel
         return delta_flop
@@ -224,7 +218,7 @@ class GroupFisherChannelUnit(L1MutableChannelUnit):
     @property
     def _delta_memory_of_a_channel(self) -> torch.Tensor:
         """Calculate the memory of a channel."""
-        delta_memory = 0
-        for module in self.output_related_dynamic_ops:
-            delta_memory += module.delta_memory_of_a_out_channel
-        return delta_memory
+        return sum(
+            module.delta_memory_of_a_out_channel
+            for module in self.output_related_dynamic_ops
+        )

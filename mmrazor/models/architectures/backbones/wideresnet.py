@@ -114,10 +114,7 @@ class BasicBlock(nn.Module):
         if self.droprate > 0:
             out = F.dropout(out, p=self.droprate, training=self.training)
         out = self.conv2(out)
-        if self.downsample:
-            out += self.downsample(identity)
-        else:
-            out += x
+        out += self.downsample(identity) if self.downsample else x
         return out
 
 
@@ -201,8 +198,7 @@ class ResLayer(nn.Sequential):
                 stride=stride,
                 bias=False)
 
-        layers = []
-        layers.append(
+        layers = [
             block(
                 in_channels=in_channels,
                 out_channels=out_channels,
@@ -211,18 +207,22 @@ class ResLayer(nn.Sequential):
                 downsample=downsample,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
-                **kwargs))
+                **kwargs
+            )
+        ]
         in_channels = out_channels
-        for _ in range(1, num_blocks):
-            layers.append(
-                block(
-                    in_channels=in_channels,
-                    out_channels=out_channels,
-                    expansion=self.expansion,
-                    stride=1,
-                    conv_cfg=conv_cfg,
-                    norm_cfg=norm_cfg,
-                    **kwargs))
+        layers.extend(
+            block(
+                in_channels=in_channels,
+                in_channels=in_channels,
+                expansion=self.expansion,
+                stride=1,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                **kwargs
+            )
+            for _ in range(1, num_blocks)
+        )
         super(ResLayer, self).__init__(*layers)
 
 
@@ -400,4 +400,4 @@ class WideResNet(BaseModule):
             x = res_layer(x)
         x = self.norm1(x)
         x = self.relu(x)
-        return tuple([x])
+        return (x, )

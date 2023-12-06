@@ -109,7 +109,7 @@ class Autotuner(triton.KernelInterface):
             # In my testing this gives decent results, and greatly reduces
             # the amount of tuning required
             if self.nearest_power_of_two:
-                key = tuple([2**int(math.log2(x) + 0.5) for x in key])
+                key = tuple(2**int(math.log2(x) + 0.5) for x in key)
 
             if key not in self.cache:
                 # prune configs

@@ -130,9 +130,7 @@ class MutableValue(BaseMutable, DerivedMethodMixin):
         Returns:
             DerivedMutable: Derived expand mutable.
         """
-        if isinstance(other, int):
-            return self.derive_expand_mutable(other)
-        elif isinstance(other, float):
+        if isinstance(other, (int, float)):
             return self.derive_expand_mutable(other)
         raise TypeError(f'Unsupported type {type(other)} for mul!')
 

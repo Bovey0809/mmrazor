@@ -99,6 +99,4 @@ class SearchableImageClassifier(ImageClassifier):
     def simple_test(self, img, img_metas=None, **kwargs):
         """Test without augmentation."""
         x = self.extract_feat(img, input_resizer=False)
-        res = self.head.simple_test(x, **kwargs)
-
-        return res
+        return self.head.simple_test(x, **kwargs)

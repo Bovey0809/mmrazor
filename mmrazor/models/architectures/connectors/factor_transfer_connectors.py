@@ -81,9 +81,7 @@ class Paraphraser(BaseConnector):
     def forward_pretrain(self, t_feat: torch.Tensor) -> torch.Tensor:
         """Forward func for pretraining."""
         factor = self.encoder(t_feat)
-        t_feat_rec = self.decoder(factor)
-
-        return t_feat_rec
+        return self.decoder(factor)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Omitted."""

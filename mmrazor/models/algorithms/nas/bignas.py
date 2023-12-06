@@ -76,9 +76,7 @@ class BigNAS(BaseAlgorithm):
         self.distiller.prepare_from_student(self.architecture)
 
         self.sample_kinds = ['max', 'min']
-        for i in range(num_random_samples):
-            self.sample_kinds.append('random' + str(i))
-
+        self.sample_kinds.extend(f'random{str(i)}' for i in range(num_random_samples))
         self.drop_path_rate = drop_path_rate
         self.backbone_dropout_stages = backbone_dropout_stages
         self._optim_wrapper_count_status_reinitialized = False

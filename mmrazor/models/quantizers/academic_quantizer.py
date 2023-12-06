@@ -157,9 +157,7 @@ class AcademicQuantizer(BaseQuantizer):
         :func:`~torch.ao.quantization.fx.prepare`.
         """
         conf = PrepareCustomConfig()
-        if prepare_custom_config is None:
-            return conf
-        else:
+        if prepare_custom_config is not None:
             for float_class_str, observed_class_str in prepare_custom_config.get(  # noqa: E501
                     FLOAT_TO_OBSERVED_DICT_KEY, []):
                 float_class = MODELS.get(float_class_str)
@@ -167,4 +165,4 @@ class AcademicQuantizer(BaseQuantizer):
                 conf.set_float_to_observed_mapping(float_class, observed_class)
             conf.set_preserved_attributes(
                 prepare_custom_config.get(PRESERVED_ATTRIBUTES_DICT_KEY, []))
-            return conf
+        return conf

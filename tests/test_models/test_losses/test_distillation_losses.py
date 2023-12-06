@@ -44,21 +44,21 @@ class TestLosses(TestCase):
         assert ofd_loss_num_2 == torch.tensor(0.0)
 
     def normal_test_1d(self, loss_instance, labels=False):
-        args = tuple([self.feats_1d, self.feats_1d])
+        args = self.feats_1d, self.feats_1d
         if labels:
             args += (self.labels, )
         loss_1d = loss_instance.forward(*args)
         self.assertTrue(loss_1d.numel() == 1)
 
     def normal_test_2d(self, loss_instance, labels=False):
-        args = tuple([self.feats_2d, self.feats_2d])
+        args = self.feats_2d, self.feats_2d
         if labels:
             args += (self.labels, )
         loss_2d = loss_instance.forward(*args)
         self.assertTrue(loss_2d.numel() == 1)
 
     def normal_test_3d(self, loss_instance, labels=False):
-        args = tuple([self.feats_3d, self.feats_3d])
+        args = self.feats_3d, self.feats_3d
         if labels:
             args += (self.labels, )
         loss_3d = loss_instance.forward(*args)

@@ -20,11 +20,9 @@ class ToyStudent(BaseModel):
             out = self.conv(batch_inputs)
             return dict(loss=out)
         elif mode == 'predict':
-            out = self.conv(batch_inputs) + 1
-            return out
+            return self.conv(batch_inputs) + 1
         elif mode == 'tensor':
-            out = self.conv(batch_inputs) + 2
-            return out
+            return self.conv(batch_inputs) + 2
 
 
 @MODELS.register_module()
@@ -47,11 +45,9 @@ class ToyOFDStudent(BaseModel):
             out = self.bn(self.conv(batch_inputs))
             return dict(loss=out)
         elif mode == 'predict':
-            out = self.bn(self.conv(batch_inputs) + 1)
-            return out
+            return self.bn(self.conv(batch_inputs) + 1)
         elif mode == 'tensor':
-            out = self.bn(self.conv(batch_inputs) + 2)
-            return out
+            return self.bn(self.conv(batch_inputs) + 2)
 
 
 @MODELS.register_module()
@@ -80,8 +76,7 @@ class ToyGenerator(BaseModel):
 
     def forward(self, data=None, batch_size=4):
         fakeimg_init = torch.randn(batch_size, self.latent_dim, 1, 1)
-        fakeimg = self.conv(fakeimg_init)
-        return fakeimg
+        return self.conv(fakeimg_init)
 
 
 @MODELS.register_module()

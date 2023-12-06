@@ -182,7 +182,8 @@ model_wrapper = dict(
 
 val_evaluator = dict(
     type='mmpose.CocoMetric',
-    ann_file=data_root + 'annotations/person_keypoints_val2017.json')
+    ann_file=f'{data_root}annotations/person_keypoints_val2017.json',
+)
 test_evaluator = val_evaluator
 
 val_cfg = dict(_delete_=True, type='mmrazor.ItePruneValLoop')

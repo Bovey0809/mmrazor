@@ -134,14 +134,13 @@ class ChannelNode(ModuleNode):
 
     def _get_in_channels_by_prev_nodes(self, prev_nodes):
         """Get input channel numbers by previous nodes."""
-        if len(prev_nodes) == 0:
-            print_log(
-                (f'As {self.name} '
-                 'has no prev nodes, so we set the in channels of it to 3.'),
-                level='debug')
-            return 3
-        else:
+        if len(prev_nodes) != 0:
             return prev_nodes[0].out_channels
+        print_log(
+            (f'As {self.name} '
+             'has no prev nodes, so we set the in channels of it to 3.'),
+            level='debug')
+        return 3
 
     def __repr__(self) -> str:
         return f'{self.name}_({self.in_channels},{self.out_channels})'
@@ -172,7 +171,7 @@ class PassUnionChannelNode(ChannelNode):
         return node.out_channel_tensor
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_uion'
+        return f'{super().__repr__()}_uion'
 
 
 class PassChannelNode(ChannelNode):
@@ -189,7 +188,7 @@ class PassChannelNode(ChannelNode):
         return channel_tensors[0]
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_pass'
+        return f'{super().__repr__()}_pass'
 
 
 class MixChannelNode(ChannelNode):
@@ -198,15 +197,14 @@ class MixChannelNode(ChannelNode):
     def channel_forward(self, channel_tensors: List[ChannelTensor]):
         """Channel forward."""
         assert len(channel_tensors) <= 1
-        if len(channel_tensors) == 1:
-            self.in_channel_tensor = channel_tensors[0]
-            self.out_channel_tensor = ChannelTensor(self.out_channels)
-        else:
+        if len(channel_tensors) != 1:
             raise NotImplementedError()
+        self.in_channel_tensor = channel_tensors[0]
+        self.out_channel_tensor = ChannelTensor(self.out_channels)
         return self.out_channel_tensor
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_mix'
+        return f'{super().__repr__()}_mix'
 
 
 class BindChannelNode(ChannelNode):
@@ -215,7 +213,7 @@ class BindChannelNode(ChannelNode):
 
     def channel_forward(self, channel_tensors: List[ChannelTensor]):
         """Channel forward."""
-        assert len(channel_tensors) > 0, f'{self}'
+        assert channel_tensors, f'{self}'
         #  align channel_tensors
         for tensor in channel_tensors[1:]:
             channel_tensors[0].union(tensor)
@@ -224,7 +222,7 @@ class BindChannelNode(ChannelNode):
         return self.out_channel_tensor
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_bind'
+        return f'{super().__repr__()}_bind'
 
     def check_channel(self):
         for node in self.prev_nodes:
@@ -250,7 +248,7 @@ class CatChannelNode(ChannelNode):
         return sum(nums)
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_cat'
+        return f'{super().__repr__()}_cat'
 
 
 class ExpandChannelNode(ChannelNode):
@@ -276,7 +274,7 @@ class ExpandChannelNode(ChannelNode):
         return self.out_channel_tensor
 
     def __repr__(self) -> str:
-        return super().__repr__() + f'_expand({self.expand_ratio})'
+        return f'{super().__repr__()}_expand({self.expand_ratio})'
 
 
 class InputChannelNode(ChannelNode):
@@ -300,7 +298,7 @@ class InputChannelNode(ChannelNode):
         return self._input_channels
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_input'
+        return f'{super().__repr__()}_input'
 
 
 class EndNode(ChannelNode):
@@ -314,7 +312,7 @@ class EndNode(ChannelNode):
         return self.out_channel_tensor
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_end'
+        return f'{super().__repr__()}_end'
 
     def check_channel(self):
         pass
@@ -376,7 +374,7 @@ class ConvNode(MixChannelNode):
         return self.val.out_channels
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_conv'
+        return f'{super().__repr__()}_conv'
 
 
 class LinearNode(MixChannelNode):
@@ -398,7 +396,7 @@ class LinearNode(MixChannelNode):
         return self.val.out_features
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_linear'
+        return f'{super().__repr__()}_linear'
 
 
 class BnNode(PassUnionChannelNode):
@@ -421,7 +419,7 @@ class BnNode(PassUnionChannelNode):
         return self.val.num_features
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_bn'
+        return f'{super().__repr__()}_bn'
 
 
 class GroupNormNode(PassUnionChannelNode):
@@ -449,7 +447,7 @@ class GroupNormNode(PassUnionChannelNode):
         return out_tensor
 
     def __repr__(self) -> str:
-        return super().__repr__() + '_gn'
+        return f'{super().__repr__()}_gn'
 
 
 # converter

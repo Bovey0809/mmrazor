@@ -100,10 +100,10 @@ class DynamicRelativePosition2D(RelativePosition2D, DynamicChannelMixin):
     @classmethod
     def convert_from(cls, module):
         """Convert a RP to a dynamic RP."""
-        dynamic_rp = cls(
+        return cls(
             head_dims=module.head_dims,
-            max_relative_position=module.max_relative_position)
-        return dynamic_rp
+            max_relative_position=module.max_relative_position,
+        )
 
     def forward(self, length_q, length_k) -> Tensor:
         """Forward of Dynamic Relative Position."""
@@ -146,9 +146,7 @@ class DynamicRelativePosition2D(RelativePosition2D, DynamicChannelMixin):
 
         final_mat_v = torch.LongTensor(final_mat_v)
         final_mat_h = torch.LongTensor(final_mat_h)
-        # get the embeddings with the corresponding distance
-
-        embeddings = self.sample_eb_table_v[final_mat_v] + \
-            self.sample_eb_table_h[final_mat_h]
-
-        return embeddings
+        return (
+            self.sample_eb_table_v[final_mat_v]
+            + self.sample_eb_table_h[final_mat_h]
+        )

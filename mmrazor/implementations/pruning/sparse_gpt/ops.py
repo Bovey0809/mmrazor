@@ -54,19 +54,18 @@ class SparseGptMixIn(ModuleProtocol):
     @property
     def hessian(self):
         """hessian always return float."""
-        if dist.is_initialized():
-            if dist.get_rank() == 0:
-                assert self._hessian is not None, 'hessian is not initialized.'
-                hessian = self._hessian.to(self.weight_matrix.device)
-            else:
-                hessian = torch.zeros(
-                    self.columns,
-                    self.columns,
-                    device=self.weight_matrix.device)
-            dist.broadcast(hessian, 0)
-            return hessian
-        else:
+        if not dist.is_initialized():
             return self._hessian
+        if dist.get_rank() == 0:
+            assert self._hessian is not None, 'hessian is not initialized.'
+            hessian = self._hessian.to(self.weight_matrix.device)
+        else:
+            hessian = torch.zeros(
+                self.columns,
+                self.columns,
+                device=self.weight_matrix.device)
+        dist.broadcast(hessian, 0)
+        return hessian
 
     @hessian.setter
     def hessian(self, value: torch.Tensor):

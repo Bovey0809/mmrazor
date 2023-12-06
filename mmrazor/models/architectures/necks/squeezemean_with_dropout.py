@@ -45,9 +45,9 @@ class SqueezeMeanPoolingWithDropout(BaseModule):
         drop_ratio = self.drop_ratio if self.drop_ratio is not None else 0.0
 
         if isinstance(inputs, tuple):
-            outs = tuple([self.dimension_reduction(x) for x in inputs])
+            outs = tuple(self.dimension_reduction(x) for x in inputs)
             if drop_ratio > 0 and self.training:
-                outs = tuple([F.dropout(x, p=drop_ratio) for x in outs])
+                outs = tuple(F.dropout(x, p=drop_ratio) for x in outs)
         elif isinstance(inputs, torch.Tensor):
             inputs = self.dimension_reduction(inputs)
             if drop_ratio > 0 and self.training:

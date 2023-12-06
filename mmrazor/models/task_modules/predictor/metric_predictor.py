@@ -43,10 +43,10 @@ class MetricPredictor:
         self.handler_cfg = handler_cfg
         self.handler = TASK_UTILS.build(handler_cfg)
 
-        assert encoding_type in [
-            'normal', 'onehot'
-        ], ('encoding_type must be `normal` or `onehot`.'
-            f'Got `{encoding_type}`.')
+        assert encoding_type in {
+            'normal',
+            'onehot',
+        }, f'encoding_type must be `normal` or `onehot`.Got `{encoding_type}`.'
         if isinstance(self.handler, RBFHandler):
             encoding_type = 'normal'
         self.encoding_type = encoding_type
@@ -77,9 +77,9 @@ class MetricPredictor:
             data = self.preprocess(np.array([self.model2vector(model)]))
             score = float(np.squeeze(self.handler.predict(data)))
             if metric.get(self.score_key_list[0], None):
-                metric.update({self.score_key_list[1]: score})
+                metric[self.score_key_list[1]] = score
             else:
-                metric.update({self.score_key_list[0]: score})
+                metric[self.score_key_list[0]] = score
         return metric
 
     def model2vector(
@@ -92,15 +92,14 @@ class MetricPredictor:
         Returns:
             Dict[str, list]: converted vector.
         """
-        index = 0
         vector_dict: Dict[str, list] = \
-            dict(normal_vector=[], onehot_vector=[])
+                dict(normal_vector=[], onehot_vector=[])
 
         assert len(model.keys()) == len(self.search_groups.keys()), (
             f'Length mismatch for model({len(model.keys())}) and search_groups'
             f'({len(self.search_groups.keys())}).')
 
-        for key, choice in model.items():
+        for index, (key, choice) in enumerate(model.items()):
             if isinstance(choice, DumpChosen):
                 assert choice.meta is not None, (
                     f'`DumpChosen.meta` of current {key} should not be None '
@@ -125,8 +124,6 @@ class MetricPredictor:
 
             vector_dict['normal_vector'].extend([_chosen_index])
             vector_dict['onehot_vector'].extend(onehot)
-            index += 1
-
         return vector_dict
 
     def vector2model(self, vector: np.array) -> Dict[str, str]:

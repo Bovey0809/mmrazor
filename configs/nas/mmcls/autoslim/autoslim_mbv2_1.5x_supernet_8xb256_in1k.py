@@ -32,27 +32,38 @@ model = dict(
     distiller=dict(
         type='ConfigurableDistiller',
         teacher_recorders=dict(
-            fc=dict(type='ModuleOutputs', source='head.fc')),
+            fc=dict(type='ModuleOutputs', source='head.fc')
+        ),
         student_recorders=dict(
-            fc=dict(type='ModuleOutputs', source='head.fc')),
+            fc=dict(type='ModuleOutputs', source='head.fc')
+        ),
         distill_losses=dict(
-            loss_kl=dict(type='KLDivergence', tau=1, loss_weight=1)),
+            loss_kl=dict(type='KLDivergence', tau=1, loss_weight=1)
+        ),
         loss_forward_mappings=dict(
             loss_kl=dict(
                 preds_S=dict(recorder='fc', from_student=True),
-                preds_T=dict(recorder='fc', from_student=False)))),
+                preds_T=dict(recorder='fc', from_student=False),
+            )
+        ),
+    ),
     mutator=dict(
         type='OneShotChannelMutator',
         channel_unit_cfg=dict(
             type='OneShotMutableChannelUnit',
             default_args=dict(
-                candidate_choices=list(i / 12 for i in range(2, 13)),
+                candidate_choices=[i / 12 for i in range(2, 13)],
                 choice_mode='ratio',
-                divisor=8)),
+                divisor=8,
+            ),
+        ),
         parse_cfg=dict(
             type='ChannelAnalyzer',
             demo_input=(1, 3, 224, 224),
-            tracer_type='BackwardTracer')))
+            tracer_type='BackwardTracer',
+        ),
+    ),
+)
 
 model_wrapper_cfg = dict(
     type='mmrazor.AutoSlimDDP',

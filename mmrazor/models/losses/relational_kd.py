@@ -41,9 +41,7 @@ def angle(pred):
     """
     pred_vec = pred.unsqueeze(0) - pred.unsqueeze(1)  # (N, N, C)
     norm_pred_vec = F.normalize(pred_vec, p=2, dim=2)
-    angle = torch.bmm(norm_pred_vec,
-                      norm_pred_vec.transpose(1, 2)).view(-1)  # (N*N*N, )
-    return angle
+    return torch.bmm(norm_pred_vec, norm_pred_vec.transpose(1, 2)).view(-1)
 
 
 @MODELS.register_module()
@@ -96,9 +94,7 @@ class DistanceWiseRKD(nn.Module):
             preds_S = F.normalize(preds_S, p=2, dim=1)
             preds_T = F.normalize(preds_T, p=2, dim=1)
 
-        loss = self.distance_loss(preds_S, preds_T) * self.loss_weight
-
-        return loss
+        return self.distance_loss(preds_S, preds_T) * self.loss_weight
 
 
 @MODELS.register_module()
@@ -144,6 +140,4 @@ class AngleWiseRKD(nn.Module):
             preds_S = F.normalize(preds_S, p=2, dim=-1)
             preds_T = F.normalize(preds_T, p=2, dim=-1)
 
-        loss = self.angle_loss(preds_S, preds_T) * self.loss_weight
-
-        return loss
+        return self.angle_loss(preds_S, preds_T) * self.loss_weight

@@ -28,7 +28,7 @@ class ShortcutLayer(BaseOP):
                  init_cfg=None):
         super().__init__(in_channels, out_channels, init_cfg)
 
-        assert reduction in [1, 2]
+        assert reduction in {1, 2}
         self.reduction = reduction
 
         # conv module can be removed if in_channels equal to out_channels

@@ -159,7 +159,7 @@ class TestItePruneAlgorithm(unittest.TestCase):
         # prepare checkpoint
         model_cfg = copy.deepcopy(MODEL_CFG)
         model: BaseModel = MODELS.build(model_cfg)
-        checkpoint_path = os.path.dirname(__file__) + '/checkpoint'
+        checkpoint_path = f'{os.path.dirname(__file__)}/checkpoint'
         torch.save(model.state_dict(), checkpoint_path)
 
         # build algorithm

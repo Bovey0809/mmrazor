@@ -71,8 +71,7 @@ def eval(model: nn.Module,
             y = y.to(device)
             correct += (y == predicted).long().sum()
             total += y.numel()
-    acc = correct / total
-    return acc
+    return correct / total
 
 
 @torch.no_grad()

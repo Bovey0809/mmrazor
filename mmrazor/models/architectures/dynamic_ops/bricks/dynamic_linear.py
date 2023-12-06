@@ -40,11 +40,11 @@ class DynamicLinear(nn.Linear, DynamicLinearMixin):
         Args:
             module (:obj:`torch.nn.Linear`): The original Linear module.
         """
-        dynamic_linear = cls(
+        return cls(
             in_features=module.in_features,
             out_features=module.out_features,
-            bias=True if module.bias is not None else False)
-        return dynamic_linear
+            bias=module.bias is not None,
+        )
 
     def forward(self, input: Tensor) -> Tensor:
         """Forward of dynamic linear OP."""

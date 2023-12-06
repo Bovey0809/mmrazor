@@ -51,12 +51,10 @@ class DeiTClsHead(VisionTransformerClsHead):
         feature of the last stage and forward in hidden layer if exists.
         """
         _, cls_token, dist_token = feats[-1]
-        if self.hidden_dim is None:
-            return cls_token, dist_token
-        else:
+        if self.hidden_dim is not None:
             cls_token = self.layers.act(self.layers.pre_logits(cls_token))
             dist_token = self.layers.act(self.layers.pre_logits(dist_token))
-            return cls_token, dist_token
+        return cls_token, dist_token
 
     def forward(self, feats: Tuple[List[torch.Tensor]]) -> torch.Tensor:
         """The forward process."""

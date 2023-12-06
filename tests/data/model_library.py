@@ -23,20 +23,11 @@ import copy
 
 def get_shape(tensor, only_length=False):
     if isinstance(tensor, torch.Tensor):
-        if only_length:
-            return len(tensor.shape)
-        else:
-            return tensor.shape
-    elif isinstance(tensor, list) or isinstance(tensor, tuple):
-        shapes = []
-        for x in tensor:
-            shapes.append(get_shape(x, only_length))
-        return shapes
+        return len(tensor.shape) if only_length else tensor.shape
+    elif isinstance(tensor, (list, tuple)):
+        return [get_shape(x, only_length) for x in tensor]
     elif isinstance(tensor, dict):
-        shapes = {}
-        for key in tensor:
-            shapes[key] = get_shape(tensor[key], only_length)
-        return shapes
+        return {key: get_shape(tensor[key], only_length) for key in tensor}
     else:
         raise NotImplementedError(
             f'unsuppored type{type(tensor)} to get shape of tensors.')
@@ -165,31 +156,22 @@ class ModelLibrary:
         return self._uninclude_models
 
     def is_include(self, name: str, includes: List[str], start_with=True):
-        for key in includes:
-            if start_with:
-                if name.startswith(key):
-                    return True
-            else:
-                if key in name:
-                    return True
-        return False
+        return any(
+            start_with and name.startswith(key) or not start_with and key in name
+            for key in includes
+        )
 
     def is_default_includes_cover_all_models(self):
         models = copy.copy(self._models)
         is_covered = True
         for name in models:
-            if self.is_include(name, self.__class__.default_includes):
-                pass
-            else:
+            if not self.is_include(name, self.__class__.default_includes):
                 is_covered = False
                 print(name, '\tnot include')
         return is_covered
 
     def short_names(self):
-        short_names = set()
-        for name in self.models:
-            short_names.add(self.models[name].short_name)
-        return short_names
+        return {self.models[name].short_name for name in self.models}
 
     def _classify_models(self, models: Dict):
         include = []
@@ -273,11 +255,10 @@ class DefaultModelLibrary(ModelLibrary):
             ConvAttnModel,
             SelfAttention,
         ]
-        model_dict = {}
-        for model in models:
-            model_dict[model.__name__] = ModelGenerator(
-                'default.' + model.__name__, model)
-        return model_dict
+        return {
+            model.__name__: ModelGenerator(f'default.{model.__name__}', model)
+            for model in models
+        }
 
     @classmethod
     def get_mm_models(cls):
@@ -315,7 +296,7 @@ class TorchModelLibrary(ModelLibrary):
         for name in attrs:
             module = getattr(torchvision.models, name)
             if isfunction(module) and name is not 'get_weight':
-                models[name] = ModelGenerator('torch.' + name, module)
+                models[name] = ModelGenerator(f'torch.{name}', module)
         return models
 
 
@@ -329,8 +310,7 @@ class MMModelLibrary(ModelLibrary):
 
     @classmethod
     def scope_path(cls):
-        path = cls._scope_path(cls.repo) + cls.base_config_path
-        return path
+        return cls._scope_path(cls.repo) + cls.base_config_path
 
     @classmethod
     def get_models(cls):
@@ -340,7 +320,7 @@ class MMModelLibrary(ModelLibrary):
             for filename in filenames:
                 if filename.endswith('.py'):
 
-                    cfg_path = dirpath + '/' + filename
+                    cfg_path = f'{dirpath}/{filename}'
                     try:
                         config = Config.fromfile(cfg_path)
                     except:
@@ -355,7 +335,8 @@ class MMModelLibrary(ModelLibrary):
                         model_cfg = cls._config_process(model_cfg)
                         if json.dumps(model_cfg) not in added_models:
                             models[model_name] = cls.generator_type()(
-                                cls.repo + '.' + model_name, model_cfg)
+                                f'{cls.repo}.{model_name}', model_cfg
+                            )
                             added_models.add(json.dumps(model_cfg))
         return models
 
@@ -366,14 +347,14 @@ class MMModelLibrary(ModelLibrary):
     @classmethod
     def get_model_name_from_path(cls, config_path, scope_path):
         import os
-        dirpath = os.path.dirname(config_path) + '/'
+        dirpath = f'{os.path.dirname(config_path)}/'
         filename = os.path.basename(config_path)
 
         model_type_name = '_'.join(dirpath.replace(scope_path, '').split('/'))
-        model_type_name = model_type_name if model_type_name == '' else model_type_name + '_'
-        model_name = model_type_name + \
-            os.path.basename(filename).split('.')[0]
-        return model_name
+        model_type_name = (
+            model_type_name if not model_type_name else f'{model_type_name}_'
+        )
+        return model_type_name + os.path.basename(filename).split('.')[0]
 
     @classmethod
     def get_model_from_path(cls, config_path):
@@ -384,15 +365,14 @@ class MMModelLibrary(ModelLibrary):
         config = cls._config_process(config=config)
         config['_scope_'] = scope
         name = cls.get_model_name_from_path(path, cls._scope_path(scope))
-        return cls.generator_type()(scope + '.' + name, config)
+        return cls.generator_type()(f'{scope}.{name}', config)
 
     @staticmethod
     def _scope_path(scope):
         if scope == 'mmseg':
             scope = 'mmsegmentation'
         repo_path = get_installed_path(scope)
-        path = repo_path + '/.mim/configs/'
-        return path
+        return f'{repo_path}/.mim/configs/'
 
     @classmethod
     def _config_process(cls, config: Dict):

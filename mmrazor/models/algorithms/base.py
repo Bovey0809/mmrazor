@@ -87,7 +87,6 @@ class BaseAlgorithm(BaseModel):
         self.module_inplace = module_inplace
         if not self.module_inplace:
             self.set_module_inplace_false(architecture, 'self.architecture')
-        pass
 
     def forward(self,
                 inputs: torch.Tensor,
@@ -200,10 +199,9 @@ class BaseAlgorithm(BaseModel):
             if hasattr(eval(varstr), 'inplace'):
                 eval(varstr).inplace = False
             else:
-                self.set_module_inplace_false(architecture._modules,
-                                              varstr + '._modules')
+                self.set_module_inplace_false(architecture._modules, f'{varstr}._modules')
         elif isinstance(architecture, OrderedDict):
             for key, value in architecture.items():
-                self.set_module_inplace_false(value, varstr + f"['{key}']")
+                self.set_module_inplace_false(value, f"{varstr}['{key}']")
         else:
             return

@@ -81,8 +81,9 @@ class DynamicConv2dCounter(ConvCounter):
                 'out_channels'].activated_channels
             mutable_channel = list(
                 module.mutable_attrs['out_channels'].mutable_channels.values())
-            if len(mutable_channel) > 0 and hasattr(
-                    mutable_channel[0], 'activated_tensor_channels'):
+            if mutable_channel and hasattr(
+                mutable_channel[0], 'activated_tensor_channels'
+            ):
                 out_channels = mutable_channel[0].activated_tensor_channels
         else:
             out_channels = module.out_channels
@@ -96,7 +97,7 @@ class DynamicConv2dCounter(ConvCounter):
 
         filters_per_channel = out_channels / groups
         conv_per_position_flops = \
-            np.prod(kernel_dims) * in_channels * filters_per_channel
+                np.prod(kernel_dims) * in_channels * filters_per_channel
 
         active_elements_count = batch_size * int(np.prod(output_dims))
 

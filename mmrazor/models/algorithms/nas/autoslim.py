@@ -69,9 +69,7 @@ class AutoSlim(BaseAlgorithm):
         self.distiller.prepare_from_student(self.architecture)
 
         self.sample_kinds = ['max', 'min']
-        for i in range(num_random_samples):
-            self.sample_kinds.append('random' + str(i))
-
+        self.sample_kinds.extend(f'random{str(i)}' for i in range(num_random_samples))
         self._optim_wrapper_count_status_reinitialized = False
         self.norm_training = norm_training
 

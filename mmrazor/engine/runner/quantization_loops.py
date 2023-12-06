@@ -237,14 +237,13 @@ class QATValLoop(ValLoop):
             # TODO: remove hard code after mmcls add data_preprocessor
             data_preprocessor = self.runner.model.module.data_preprocessor
             self.architecture = self.runner.model.module.architecture
-            self.architecture.data_preprocessor = data_preprocessor
-
         else:
             assert hasattr(self.runner.model, 'architecture')
             # TODO: remove hard code after mmcls add data_preprocessor
             data_preprocessor = self.runner.model.data_preprocessor
             self.architecture = self.runner.model.architecture
-            self.architecture.data_preprocessor = data_preprocessor
+
+        self.architecture.data_preprocessor = data_preprocessor
 
     def run(self) -> dict:
         """Launch validation."""
@@ -258,8 +257,8 @@ class QATValLoop(ValLoop):
         metrics = self.evaluator.evaluate(len(self.dataloader.dataset))
         qat_metrics = dict()
         for key, value in metrics.items():
-            qat_key = 'qat.' + key
-            ori_key = 'original.' + key
+            qat_key = f'qat.{key}'
+            ori_key = f'original.{key}'
             qat_metrics[qat_key] = value
             self.runner.message_hub.log_scalars.pop(f'val/{ori_key}', None)
 
@@ -274,8 +273,8 @@ class QATValLoop(ValLoop):
         metrics = self.evaluator.evaluate(len(self.dataloader.dataset))
         qat_metrics = dict()
         for key, value in metrics.items():
-            qat_key = 'qat.' + key
-            ori_key = 'original.' + key
+            qat_key = f'qat.{key}'
+            ori_key = f'original.{key}'
             qat_metrics[ori_key] = value
             self.runner.message_hub.log_scalars.pop(f'val/{qat_key}', None)
 

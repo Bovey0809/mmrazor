@@ -53,7 +53,7 @@ class Channel(BaseModule):
 
         name2module = dict(model.named_modules())
         name2module.pop('')
-        module = name2module[name] if name in name2module else None
+        module = name2module.get(name, None)
         return Channel(
             name, module, (start, end), is_output_channel=is_output_channel)
 
@@ -128,8 +128,8 @@ class ChannelUnit(BaseModule):
         super().__init__()
 
         self.num_channels = num_channels
-        self.output_related: List[nn.Module] = list()
-        self.input_related: List[nn.Module] = list()
+        self.output_related: List[nn.Module] = []
+        self.input_related: List[nn.Module] = []
         self.init_args: Dict = {
         }  # is used to generate new channel unit with same args
 
@@ -150,10 +150,7 @@ class ChannelUnit(BaseModule):
             channel_config['is_output_channel'] = is_output_channel
 
         config = copy.deepcopy(config)
-        if 'channels' in config:
-            channels = config.pop('channels')
-        else:
-            channels = None
+        channels = config.pop('channels') if 'channels' in config else None
         unit = cls(**(config['init_args']))
         if channels is not None:
             for channel_config in channels['input_related']:
@@ -249,10 +246,11 @@ class ChannelUnit(BaseModule):
 
     def _channel_dict(self) -> Dict:
         """Return channel config."""
-        info = {
-            'input_related':
-            [channel.config_template() for channel in self.input_related],
-            'output_related':
-            [channel.config_template() for channel in self.output_related],
+        return {
+            'input_related': [
+                channel.config_template() for channel in self.input_related
+            ],
+            'output_related': [
+                channel.config_template() for channel in self.output_related
+            ],
         }
-        return info

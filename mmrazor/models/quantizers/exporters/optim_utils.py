@@ -18,14 +18,15 @@ class ONNXOptimUtils():
     @classmethod
     def map_name_and_data(cls, onnx_model: onnx.ModelProto):
         """Build the mapping from a data's name to the data itself."""
-        params = {}
-        for init in onnx_model.graph.initializer:
-            params[init.name] = numpy_helper.to_array(init)
+        params = {
+            init.name: numpy_helper.to_array(init)
+            for init in onnx_model.graph.initializer
+        }
         for node in onnx_model.graph.node:
             # If two zero_points are identity, one is a reference to the other
             # after optimized by onnx.
             if node.op_type == 'Identity' and len(node.input) == 1 and \
-                    node.input[0] in params:
+                        node.input[0] in params:
                 params[node.output[0]] = copy.deepcopy(params[node.input[0]])
             if node.op_type == 'Constant':
                 for attr in node.attribute:
@@ -86,7 +87,7 @@ class ONNXOptimUtils():
         for idx, node in enumerate(onnx_model.graph.node):
             if node.op_type == 'Pad':
                 pads = name2data[node.input[1]]
-                if all([x == 0 for x in pads]):
+                if all(x == 0 for x in pads):
                     print_log(f'Remove pad op: <{node.name}>.')
                     next_nodes = inp2node[node.output[0]]
                     for next_node, idx in next_nodes:
@@ -127,7 +128,7 @@ class ONNXOptimUtils():
 
             return True
 
-        standalone_nodes = list()
+        standalone_nodes = []
         for node in onnx_model.graph.node:
 
             if _is_standalone_node(node, input2node, output2node):
@@ -143,7 +144,7 @@ class ONNXOptimUtils():
             input2node = cls.map_input_and_node(onnx_model)
 
         initializers = cls.map_name_and_initializer(onnx_model)
-        redundant_initializers = list()
+        redundant_initializers = []
         redundant_set = set()
         for name, init_and_idx in initializers.items():
             if name not in input2node and name not in redundant_set:
@@ -172,11 +173,7 @@ class ONNXOptimUtils():
                 Defaults to True.
         """
 
-        if inplace:
-            _onnx_model = onnx_model
-        else:
-            _onnx_model = copy.deepcopy(onnx_model)
-
+        _onnx_model = onnx_model if inplace else copy.deepcopy(onnx_model)
         if initializers is None:
             initializers = cls.map_name_and_initializer(
                 _onnx_model, allow_redundant=True)
@@ -201,7 +198,7 @@ class ONNXOptimUtils():
         indegree = {node.name: 0 for node in _onnx_model.graph.node}
 
         # Build graph
-        for i, node in enumerate(_onnx_model.graph.node):
+        for node in _onnx_model.graph.node:
             for input_name in node.input:
                 if input_name not in initializers:
                     indegree[node.name] += 1
@@ -213,10 +210,11 @@ class ONNXOptimUtils():
         sorted_nodes = []
 
         # There are some nodes whose input are all initializers.
-        for node_name, in_degree in indegree.items():
-            if in_degree == 0:
-                root.append(node_name)
-
+        root.extend(
+            node_name
+            for node_name, in_degree in indegree.items()
+            if in_degree == 0
+        )
         while root:
             node_name = root.pop()
             # There is no intersection between graph_input and
@@ -260,6 +258,4 @@ class ONNXOptimUtils():
             cls.remove_initializer_from_onnx(init, onnx_model)
             print_log(f'Remove initializer {init.name}')
 
-        sorted_onnx_model = cls.topo_sort(onnx_model)
-
-        return sorted_onnx_model
+        return cls.topo_sort(onnx_model)

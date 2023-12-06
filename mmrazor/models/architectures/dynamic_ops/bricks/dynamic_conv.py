@@ -51,8 +51,9 @@ class DynamicConv2d(nn.Conv2d, DynamicConvMixin):
             padding=module.padding,
             dilation=module.dilation,
             groups=module.groups,
-            bias=True if module.bias is not None else False,
-            padding_mode=module.padding_mode)
+            bias=module.bias is not None,
+            padding_mode=module.padding_mode,
+        )
 
     @property
     def conv_func(self) -> Callable:
@@ -104,8 +105,9 @@ class BigNasConv2d(nn.Conv2d, BigNasConvMixin):
             padding=module.padding,
             dilation=module.dilation,
             groups=module.groups,
-            bias=True if module.bias is not None else False,
-            padding_mode=module.padding_mode)
+            bias=module.bias is not None,
+            padding_mode=module.padding_mode,
+        )
 
     @property
     def conv_func(self) -> Callable:
@@ -163,8 +165,9 @@ class OFAConv2d(nn.Conv2d, OFAConvMixin):
             padding=module.padding,
             dilation=module.dilation,
             groups=module.groups,
-            bias=True if module.bias is not None else False,
-            padding_mode=module.padding_mode)
+            bias=module.bias is not None,
+            padding_mode=module.padding_mode,
+        )
 
     @property
     def conv_func(self) -> Callable:
@@ -211,8 +214,9 @@ class FuseConv2d(nn.Conv2d, FuseConvMixin):
             padding=module.padding,
             dilation=module.dilation,
             groups=module.groups,
-            bias=True if module.bias is not None else False,
-            padding_mode=module.padding_mode)
+            bias=module.bias is not None,
+            padding_mode=module.padding_mode,
+        )
 
     @property
     def conv_func(self) -> Callable:
@@ -261,7 +265,7 @@ class DynamicConv2dAdaptivePadding(DynamicConv2d):
         weight, bias, padding = self.get_dynamic_params()
         groups = self.groups
         if groups == self.in_channels == self.out_channels and \
-                self.mutable_in_channels is not None:
+                    self.mutable_in_channels is not None:
             mutable_in_channels = self.mutable_attrs['in_channels']
             groups = mutable_in_channels.current_mask.sum().item()
         out_channels = weight.size(0)
@@ -277,7 +281,8 @@ class DynamicConv2dAdaptivePadding(DynamicConv2d):
             padding=padding,
             dilation=self.dilation,
             groups=groups,
-            bias=True if bias is not None else False)
+            bias=bias is not None,
+        )
 
         static_conv.weight = nn.Parameter(weight)
         if bias is not None:

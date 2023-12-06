@@ -15,13 +15,11 @@ from .dynamic_mixins import DynamicChannelMixin
 PartialType = Callable[[Any, Optional[nn.Parameter]], Any]
 
 
-def _ntuple(n: int) -> Callable:  # pragma: no cover
+def _ntuple(n: int) -> Callable:    # pragma: no cover
     """Repeat a number n times."""
 
     def parse(x):
-        if isinstance(x, Iterable):
-            return tuple(x)
-        return tuple(repeat(x, n))
+        return tuple(x) if isinstance(x, Iterable) else tuple(repeat(x, n))
 
     return parse
 
@@ -215,7 +213,7 @@ class DynamicConvMixin(DynamicChannelMixin):
         weight, bias, padding = self.get_dynamic_params()
         groups = self.groups
         if groups == self.in_channels == self.out_channels and \
-                self.mutable_in_channels is not None:
+                    self.mutable_in_channels is not None:
             mutable_in_channels = self.mutable_attrs['in_channels']
             groups = mutable_in_channels.current_mask.sum().item()
         out_channels = weight.size(0)
@@ -232,7 +230,8 @@ class DynamicConvMixin(DynamicChannelMixin):
             padding_mode=self.padding_mode,
             dilation=self.dilation,
             groups=groups,
-            bias=True if bias is not None else False)
+            bias=bias is not None,
+        )
 
         static_conv.weight = nn.Parameter(weight)
         if bias is not None:
@@ -506,7 +505,7 @@ class FuseConvMixin(DynamicConvMixin):
         weight, bias, padding = self.get_dynamic_params()
         groups = self.groups
         if groups == self.in_channels == self.out_channels and \
-                self.mutable_in_channels is not None:
+                    self.mutable_in_channels is not None:
             mutable_in_channels = self.mutable_attrs['in_channels']
             groups = mutable_in_channels.current_mask.sum().item()
         out_channels = weight.size(0)
@@ -523,7 +522,8 @@ class FuseConvMixin(DynamicConvMixin):
             padding_mode=self.padding_mode,
             dilation=self.dilation,
             groups=groups,
-            bias=True if bias is not None else False)
+            bias=bias is not None,
+        )
 
         static_conv.weight = nn.Parameter(weight)
         if bias is not None:

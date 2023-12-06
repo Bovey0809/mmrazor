@@ -29,8 +29,7 @@ class DartsSubnetClsHead(LinearClsHead):
     def forward_aux(self, feats: Tuple[torch.Tensor]):
 
         aux_feat = feats[0]
-        aux_cls_score = self.aux_linear(aux_feat)
-        return aux_cls_score
+        return self.aux_linear(aux_feat)
 
     def _get_aux_loss(self, cls_score: torch.Tensor,
                       data_samples: List[ClsDataSample], **kwargs):

@@ -243,8 +243,7 @@ class AttentiveMobileNetV3(BaseBackbone):
             _layers.append(mb_layer)
             self.in_channels = max(out_channels)
 
-        dynamic_seq = DynamicSequential(*_layers)
-        return dynamic_seq
+        return DynamicSequential(*_layers)
 
     def register_mutables(self):
         """Mutate the BigNAS-style MobileNetV3."""
@@ -267,22 +266,26 @@ class AttentiveMobileNetV3(BaseBackbone):
             expand_ratios = self.expand_ratio_list[i]
             out_channels = self.num_channels_list[i]
 
-            prefix = 'backbone.layers.' + str(i + 1) + '.'
+            prefix = f'backbone.layers.{str(i + 1)}.'
 
             mutable_out_channels = OneShotMutableChannel(
-                alias=prefix + 'out_channels',
+                alias=f'{prefix}out_channels',
                 candidate_choices=out_channels,
-                num_channels=max(out_channels))
+                num_channels=max(out_channels),
+            )
 
             if not self.fine_grained_mode:
                 mutable_kernel_size = OneShotMutableValue(
-                    alias=prefix + 'kernel_size', value_list=kernel_sizes)
+                    alias=f'{prefix}kernel_size', value_list=kernel_sizes
+                )
 
                 mutable_expand_ratio = OneShotMutableValue(
-                    alias=prefix + 'expand_ratio', value_list=expand_ratios)
+                    alias=f'{prefix}expand_ratio', value_list=expand_ratios
+                )
 
             mutable_depth = OneShotMutableValue(
-                alias=prefix + 'depth', value_list=num_blocks)
+                alias=f'{prefix}depth', value_list=num_blocks
+            )
             layer.register_mutable_attr('depth', mutable_depth)
 
             for k in range(max(self.num_blocks_list[i])):

@@ -39,13 +39,12 @@ def get_model_latency(model: torch.nn.Module,
     """
     assert repeat_num >= 1
 
-    fps_list = []
-
-    for _ in range(repeat_num):
-        fps_list.append(
-            _get_model_latency(model, input_shape, max_iter, num_warmup,
-                               log_interval))
-
+    fps_list = [
+        _get_model_latency(
+            model, input_shape, max_iter, num_warmup, log_interval
+        )
+        for _ in range(repeat_num)
+    ]
     latency = round(1000 / fps_list[0], 1)
 
     if repeat_num > 1:
@@ -62,7 +61,7 @@ def get_model_latency(model: torch.nn.Module,
         latency = mean_times_per_img
 
     if as_strings:
-        latency = str(latency) + ' ' + unit  # type: ignore
+        latency = f'{str(latency)} {unit}'
 
     return latency
 

@@ -90,13 +90,11 @@ class DynamicLayerNormMixin(DynamicChannelMixin):
         else:
             return None
 
-        if 'num_features' in self.mutable_attrs:
-            out_mask = self.mutable_num_features.current_mask.to(
-                refer_tensor.device)
-        else:
-            out_mask = torch.ones_like(refer_tensor).bool()
-
-        return out_mask
+        return (
+            self.mutable_num_features.current_mask.to(refer_tensor.device)
+            if 'num_features' in self.mutable_attrs
+            else torch.ones_like(refer_tensor).bool()
+        )
 
     def get_dynamic_params(
             self: LayerNorm) -> Tuple[Optional[Tensor], Optional[Tensor]]:

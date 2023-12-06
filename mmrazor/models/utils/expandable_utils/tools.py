@@ -77,13 +77,12 @@ def make_channel_divisible(model: nn.Module, divisor, zero_weight=True):
 
     structure = mutator.choice_template
     for key, num in structure.items():
-        unit = mutator._name2unit[key]
         if num % divisor == 0:
             continue
-        else:
-            num = (num // divisor + 1) * divisor
-            num = max(num, unit.num_channels)
-            unit.expand_to(num)
+        num = (num // divisor + 1) * divisor
+        unit = mutator._name2unit[key]
+        num = max(num, unit.num_channels)
+        unit.expand_to(num)
 
     model = expand_expandable_dynamic_model(model, zero=zero_weight)
     mutator = to_expandable_model(copy.deepcopy(model))

@@ -12,8 +12,7 @@ def parse_args():
     parser.add_argument('--out-path', help='save checkpoint path')
     parser.add_argument(
         '--inplace', action='store_true', help='replace origin ckpt')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def main():
@@ -36,10 +35,7 @@ def main():
     else:
         ckpt_path = Path(args.checkpoint)
         ckpt_name = ckpt_path.stem
-        if args.out_path:
-            ckpt_dir = Path(args.out_path)
-        else:
-            ckpt_dir = ckpt_path.parent
+        ckpt_dir = Path(args.out_path) if args.out_path else ckpt_path.parent
         new_ckpt_path = ckpt_dir / f'{ckpt_name}_student.pth'
         torch.save(checkpoint, new_ckpt_path)
 

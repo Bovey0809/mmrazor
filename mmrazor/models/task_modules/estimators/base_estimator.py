@@ -23,10 +23,11 @@ class BaseEstimator(metaclass=ABCMeta):
                  input_shape: Tuple = (1, 3, 224, 224),
                  units: Dict = dict(),
                  as_strings: bool = False):
-        assert len(input_shape) in [
-            3, 4, 5
-        ], ('The length of input_shape must be in [3, 4, 5]. '
-            f'Got `{len(input_shape)}`.')
+        assert len(input_shape) in {
+            3,
+            4,
+            5,
+        }, f'The length of input_shape must be in [3, 4, 5]. Got `{len(input_shape)}`.'
         self.input_shape = input_shape
         self.units = units
         self.as_strings = as_strings

@@ -51,8 +51,12 @@ class MLP(BaseModule):
 
         hidden_layers = []
         for _ in range(num_hidden_layers):
-            hidden_layers.append(nn.Linear(hidden_features, hidden_features))
-            hidden_layers.append(build_activation_layer(act_cfg))
+            hidden_layers.extend(
+                (
+                    nn.Linear(hidden_features, hidden_features),
+                    build_activation_layer(act_cfg),
+                )
+            )
         self.hidden_layers = nn.Sequential(*hidden_layers)
 
         self.fc2 = nn.Linear(hidden_features, out_features)
@@ -137,7 +141,7 @@ class MLPHandler(BaseHandler):
 
     def save(self, path: str) -> str:
         """Save predictor and return saved path for diff suffix."""
-        path = path + '_mlp.pth'
+        path += '_mlp.pth'
         torch.save({'state_dict': self.model.state_dict(), 'meta': {}}, path)
         return path
 

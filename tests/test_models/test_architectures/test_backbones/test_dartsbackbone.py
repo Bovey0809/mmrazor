@@ -103,13 +103,13 @@ class TestDartsBackbone(TestCase):
                 continue
 
             node_name = key.split('._candidates')[0].split('.')[-1]
-            if node_name not in tmp_dict.keys():
-                tmp_dict[node_name] = [key.split('._candidates')[0]]
-            else:
+            if node_name in tmp_dict:
                 current_key = key.split('._candidates')[0]
                 if current_key not in tmp_dict[node_name]:
                     tmp_dict[node_name].append(current_key)
 
+            else:
+                tmp_dict[node_name] = [key.split('._candidates')[0]]
         return list(tmp_dict.values())
 
 

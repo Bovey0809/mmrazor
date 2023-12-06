@@ -70,9 +70,7 @@ class DynamicLinearClsHead(ClsHead, DynamicHead):
     def forward(self, feats: Tuple[torch.Tensor]) -> torch.Tensor:
         """The forward process."""
         pre_logits = self.pre_logits(feats)
-        # The final classification head.
-        cls_score = self.fc(pre_logits)
-        return cls_score
+        return self.fc(pre_logits)
 
     def connect_with_backbone(self,
                               backbone_output_mutable: BaseMutable) -> None:

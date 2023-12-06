@@ -33,13 +33,11 @@ class ToyModel(BaseModel):
         with self.deliver:
             outputs = self.linear(inputs)
         if mode == 'tensor':
-            return outputs
+            pass
         elif mode == 'loss':
             loss = (labels - outputs).sum()
             outputs = dict(loss=loss)
-            return outputs
-        else:
-            return outputs
+        return outputs
 
 
 class DummyDataset(Dataset):

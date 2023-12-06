@@ -34,10 +34,7 @@ from mmrazor.models.architectures.utils.mutable_register import (
 
 
 def untracable_function(x: torch.Tensor):
-    if x.sum() > 0:
-        x = x - 1
-    else:
-        x = x + 1
+    x = x - 1 if x.sum() > 0 else x + 1
     return x
 
 
@@ -50,10 +47,7 @@ class UntracableModule(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = self.conv(x)
-        if x.sum() > 0:
-            x = x * 2
-        else:
-            x = x * -2
+        x = x * 2 if x.sum() > 0 else x * -2
         x = self.conv2(x)
         return x
 
@@ -72,10 +66,7 @@ class ModuleWithUntracableMethod(nn.Module):
         return x
 
     def untracable_method(self, x):
-        if x.sum() > 0:
-            x = x * 2
-        else:
-            x = x * -2
+        x = x * 2 if x.sum() > 0 else x * -2
         return x
 
 @MODELS.register_module()
@@ -171,9 +162,7 @@ class MultiConcatModel(Module):
         x4 = self.op4(x)
         cat2 = torch.cat([x3, x4], dim=1)
         x_pool = self.avg_pool(cat2).flatten(1)
-        output = self.fc(x_pool)
-
-        return output
+        return self.fc(x_pool)
 
 
 class MultiConcatModel2(Module):
@@ -213,9 +202,7 @@ class MultiConcatModel2(Module):
         x4 = self.op4(cat2)
 
         x_pool = self.avg_pool(x4).reshape([x4.shape[0], -1])
-        output = self.fc(x_pool)
-
-        return output
+        return self.fc(x_pool)
 
 
 class ConcatModel(Module):
@@ -252,9 +239,7 @@ class ConcatModel(Module):
         x3 = self.op3(cat1)
 
         x_pool = self.avg_pool(x3).flatten(1)
-        output = self.fc(x_pool)
-
-        return output
+        return self.fc(x_pool)
 
 
 class ResBlock(Module):
@@ -290,8 +275,7 @@ class ResBlock(Module):
         x2 = self.bn2(self.op2(x1))
         x3 = self.op3(x2 + x1)
         x_pool = self.avg_pool(x3).flatten(1)
-        output = self.fc(x_pool)
-        return output
+        return self.fc(x_pool)
 
 
 class SingleLineModel(nn.Module):
@@ -356,8 +340,7 @@ class AddCatModel(Module):
         cat2 = torch.cat((x3, x4), dim=1)
         x5 = self.op5(cat1 + cat2)
         x_pool = self.avg_pool(x5).flatten(1)
-        y = self.fc(x_pool)
-        return y
+        return self.fc(x_pool)
 
 
 class GroupWiseConvModel(nn.Module):
@@ -987,8 +970,7 @@ class DynamicMMBlock(nn.Module):
             _layers.append(mb_layer)
             self.in_channels = max(out_channels)
 
-        dynamic_seq = DynamicSequential(*_layers)
-        return dynamic_seq
+        return DynamicSequential(*_layers)
 
     def register_mutables(self):
         """Mutate the BigNAS-style MobileNetV3."""
@@ -1011,22 +993,26 @@ class DynamicMMBlock(nn.Module):
             expand_ratios = self.expand_ratio_list[i]
             out_channels = self.num_channels_list[i]
 
-            prefix = 'backbone.layers.' + str(i + 1) + '.'
+            prefix = f'backbone.layers.{str(i + 1)}.'
 
             mutable_out_channels = OneShotMutableChannel(
-                alias=prefix + 'out_channels',
+                alias=f'{prefix}out_channels',
                 candidate_choices=out_channels,
-                num_channels=max(out_channels))
+                num_channels=max(out_channels),
+            )
 
             if not self.fine_grained_mode:
                 mutable_kernel_size = OneShotMutableValue(
-                    alias=prefix + 'kernel_size', value_list=kernel_sizes)
+                    alias=f'{prefix}kernel_size', value_list=kernel_sizes
+                )
 
                 mutable_expand_ratio = OneShotMutableValue(
-                    alias=prefix + 'expand_ratio', value_list=expand_ratios)
+                    alias=f'{prefix}expand_ratio', value_list=expand_ratios
+                )
 
             mutable_depth = OneShotMutableValue(
-                alias=prefix + 'depth', value_list=num_blocks)
+                alias=f'{prefix}depth', value_list=num_blocks
+            )
             layer.register_mutable_attr('depth', mutable_depth)
 
             for k in range(max(self.num_blocks_list[i])):
@@ -1067,7 +1053,7 @@ class DynamicMMBlock(nn.Module):
 
     def forward(self, x):
         x = self.first_conv(x)
-        for _, layer in enumerate(self.layers):
+        for layer in self.layers:
             x = layer(x)
 
-        return tuple([x])
+        return (x, )

@@ -14,8 +14,7 @@ def parse_args():
     parser.add_argument('config')
     parser.add_argument('-H', default=224, type=int)
     parser.add_argument('-W', default=224, type=int)
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def input_generator_wrapper(model, shape, training, scope=None):

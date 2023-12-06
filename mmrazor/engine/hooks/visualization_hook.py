@@ -145,12 +145,12 @@ class RazorVisualizationHook(Hook):
 
         cfg = runner.cfg.copy()
         test_pipeline = cfg.test_dataloader.dataset.pipeline
-        new_test_pipeline = []
-        for pipeline in test_pipeline:
-            if pipeline['type'] != 'LoadAnnotations' and pipeline[
-                    'type'] != 'LoadPanopticAnnotations':
-                new_test_pipeline.append(pipeline)
-
+        new_test_pipeline = [
+            pipeline
+            for pipeline in test_pipeline
+            if pipeline['type']
+            not in ['LoadAnnotations', 'LoadPanopticAnnotations']
+        ]
         test_pipeline = Compose(new_test_pipeline)
         dataset = runner.val_loop.dataloader.dataset
 

@@ -57,7 +57,7 @@ class TestBYOTDistiller(TestCase):
             _ = BYOTDistiller(**distiller_kwargs_)
 
         distiller_kwargs_ = copy.deepcopy(distiller_kwargs)
-        distiller_kwargs_['loss_forward_mappings']['loss_toy'] = list()
+        distiller_kwargs_['loss_forward_mappings']['loss_toy'] = []
         with self.assertRaisesRegex(
                 TypeError, 'Each item of loss_forward_mappings should be '):
             _ = BYOTDistiller(**distiller_kwargs_)

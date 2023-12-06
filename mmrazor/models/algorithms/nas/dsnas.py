@@ -189,20 +189,16 @@ class DSNAS(BaseAlgorithm):
         spec_modules = []
         for name, module in self.architecture.named_modules():
             if isinstance(module, BaseMutable):
-                for choice in module.choices:
-                    spec_modules.append(name + '._candidates.' + choice)
-
-        mutable_module_resources = self.estimator.estimate_separation_modules(
-            self.architecture, dict(spec_modules=spec_modules))
-
-        return mutable_module_resources
+                spec_modules.extend(
+                    f'{name}._candidates.{choice}' for choice in module.choices
+                )
+        return self.estimator.estimate_separation_modules(
+            self.architecture, dict(spec_modules=spec_modules)
+        )
 
     def need_update_mutator(self, cur_epoch: int) -> bool:
         """Whether to update mutator."""
-        if cur_epoch >= self.pretrain_epochs and \
-           cur_epoch < self.finetune_epochs:
-            return True
-        return False
+        return cur_epoch >= self.pretrain_epochs and cur_epoch < self.finetune_epochs
 
     def compute_mutator_loss(self) -> Dict[str, torch.Tensor]:
         """Compute mutator loss.
@@ -217,17 +213,16 @@ class DSNAS(BaseAlgorithm):
         flops_loss = 0.0
         for name, module in self.architecture.named_modules():
             if isinstance(module, BaseMutable):
-                k = module.mutable_prefix + '_' + \
-                    str(self.search_space_name_list.index(name))
+                k = f'{module.mutable_prefix}_{str(self.search_space_name_list.index(name))}'
                 probs = F.softmax(self.mutator.arch_params[k], -1)
                 arch_loss += torch.log(
                     (module.arch_weights * probs).sum(-1)).sum()
 
                 # get the index of op with max arch weights.
                 index = (module.arch_weights == 1).nonzero().item()
-                _module_key = name + '._candidates.' + module.choices[index]
+                _module_key = f'{name}._candidates.{module.choices[index]}'
                 flops_loss += probs[index] * \
-                    self.mutable_module_resources[_module_key]['flops']
+                        self.mutable_module_resources[_module_key]['flops']
 
         mutator_loss = dict(arch_loss=arch_loss / self.world_size)
 
@@ -240,7 +235,7 @@ class DSNAS(BaseAlgorithm):
         subnet_flops = self.estimator.estimate(copied_model)['flops']
         if subnet_flops >= self.flops_constraints:
             mutator_loss['flops_loss'] = \
-                (flops_loss * self.flops_loss_coef) / self.world_size
+                    (flops_loss * self.flops_loss_coef) / self.world_size
 
         return mutator_loss
 
@@ -248,8 +243,7 @@ class DSNAS(BaseAlgorithm):
         """Handle grads of arch params & arch weights."""
         for name, module in self.architecture.named_modules():
             if isinstance(module, BaseMutable):
-                k = module.mutable_prefix + '_' + \
-                    str(self.search_space_name_list.index(name))
+                k = f'{module.mutable_prefix}_{str(self.search_space_name_list.index(name))}'
                 self.mutator.arch_params[k].grad.data.mul_(
                     module.arch_weights.grad.data.sum())
                 module.arch_weights.grad.zero_()

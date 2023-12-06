@@ -47,9 +47,7 @@ def test_searchable_shufflenet_v2_mutable() -> None:
             mutable_nums += 1
 
     arch_setting = backbone.arch_setting
-    target_mutable_nums = 0
-    for layer_cfg in arch_setting:
-        target_mutable_nums += layer_cfg[1]
+    target_mutable_nums = sum(layer_cfg[1] for layer_cfg in arch_setting)
     assert mutable_nums == target_mutable_nums
 
 

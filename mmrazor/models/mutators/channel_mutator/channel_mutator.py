@@ -174,22 +174,21 @@ class ChannelMutator(BaseMutator, Generic[ChannelUnitType]):
         """
         # template of units
         units = self.mutable_units if only_mutable_units else self.units
-        units_template = {}
-        for unit in units:
-            units_template[unit.name] = unit.config_template(
-                with_init_args=with_unit_init_args,
-                with_channels=with_channels)
-
-        # template of mutator
-        template = dict(
+        units_template = {
+            unit.name: unit.config_template(
+                with_init_args=with_unit_init_args, with_channels=with_channels
+            )
+            for unit in units
+        }
+        return dict(
             type=str(self.__class__.__name__),
             channel_unit_cfg=dict(
                 type=str(self.unit_class.__name__),
                 default_args=self.unit_default_args,
-                units=units_template),
-            parse_cfg=self.parse_cfg)
-
-        return template
+                units=units_template,
+            ),
+            parse_cfg=self.parse_cfg,
+        )
 
     def fix_channel_mutables(self):
         """Fix ChannelMutables."""
@@ -244,10 +243,7 @@ class ChannelMutator(BaseMutator, Generic[ChannelUnitType]):
                 ...
             }
         """
-        template = {}
-        for unit in self.mutable_units:
-            template[unit.name] = unit.current_choice
-        return template
+        return {unit.name: unit.current_choice for unit in self.mutable_units}
 
     @property
     def search_groups(self) -> Dict[int, List]:

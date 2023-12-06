@@ -40,17 +40,12 @@ def build_razor_model_from_cfg(
     # TODO relay on mmengine:HAOCHENYE/config_new_feature
     if cfg.get('cfg_path', None) and not cfg.get('type', None):
         from mmengine.hub import get_model
-        model = get_model(**cfg)  # type: ignore
-        return model
-
+        return get_model(**cfg)
     return_architecture = False
     if cfg.get('_return_architecture_', None):
         return_architecture = cfg.pop('_return_architecture_')
     razor_model = build_from_cfg(cfg, registry, default_args)
-    if return_architecture:
-        return razor_model.architecture
-    else:
-        return razor_model
+    return razor_model.architecture if return_architecture else razor_model
 
 
 # Registries For Runner and the related

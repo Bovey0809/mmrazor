@@ -242,11 +242,7 @@ def main():
 
     # simulation training process
     lr_list, momentum_list = simulate_train(data_loader, cfg, by_epoch)
-    if args.param == 'lr':
-        param_list = lr_list
-    else:
-        param_list = momentum_list
-
+    param_list = lr_list if args.param == 'lr' else momentum_list
     param_name = 'Learning Rate' if args.param == 'lr' else 'Momentum'
     plot_curve(param_list, args, param_name, len(data_loader), by_epoch)
 

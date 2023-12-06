@@ -34,14 +34,13 @@ class SingleTeacherDistillValLoop(ValLoop):
             # TODO: remove hard code after mmcls add data_preprocessor
             data_preprocessor = self.runner.model.module.data_preprocessor
             self.teacher = self.runner.model.module.teacher
-            self.teacher.data_preprocessor = data_preprocessor
-
         else:
             assert hasattr(self.runner.model, 'teacher')
             # TODO: remove hard code after mmcls add data_preprocessor
             data_preprocessor = self.runner.model.data_preprocessor
             self.teacher = self.runner.model.teacher
-            self.teacher.data_preprocessor = data_preprocessor
+
+        self.teacher.data_preprocessor = data_preprocessor
 
     def run(self):
         """Launch validation."""
@@ -59,7 +58,7 @@ class SingleTeacherDistillValLoop(ValLoop):
         # compute teacher metrics
         teacher_metrics = self.evaluator.evaluate(len(self.dataloader.dataset))
         for key, value in teacher_metrics.items():
-            teacher_key = 'teacher.' + key
+            teacher_key = f'teacher.{key}'
             metrics[teacher_key] = value
 
         self.runner.call_hook('after_val_epoch', metrics=metrics)
@@ -120,7 +119,7 @@ class SelfDistillValLoop(ValLoop):
         metrics = self.evaluator.evaluate(len(self.dataloader.dataset))
         student_metrics = dict()
         for key, value in metrics.items():
-            student_key = 'student.' + key
+            student_key = f'student.{key}'
             student_metrics[student_key] = value
 
         self.runner.call_hook('after_val_epoch', metrics=student_metrics)

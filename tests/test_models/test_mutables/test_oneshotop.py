@@ -110,7 +110,7 @@ class TestMutables(TestCase):
         assert op.sample_choice() in [
             'shuffle_3x3', 'shuffle_5x5', 'shuffle_7x7', 'shuffle_xception'
         ]
-        assert 1 - sum(op.choice_probs) < 0.00001
+        assert sum(op.choice_probs) > 1 - 0.00001
 
         # test unfixed mode
         op.current_choice = 'shuffle_3x3'
