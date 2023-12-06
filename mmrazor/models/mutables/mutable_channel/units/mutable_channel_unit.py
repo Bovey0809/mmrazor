@@ -54,8 +54,7 @@ class MutableChannelUnit(ChannelUnit):
 
     @classmethod
     def init_from_mutable_channel(cls, mutable_channel: BaseMutableChannel):
-        unit = cls(mutable_channel.num_channels)
-        return unit
+        return cls(mutable_channel.num_channels)
 
     @classmethod
     def init_from_predefined_model(cls, model: nn.Module):

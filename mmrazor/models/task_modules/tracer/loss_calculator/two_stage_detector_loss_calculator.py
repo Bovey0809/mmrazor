@@ -22,6 +22,6 @@ class TwoStageDetectorPseudoLoss:
         pseudo_output = model.neck(pseudo_output)
         out = torch.tensor(0.)
         for levels in pseudo_output:
-            out += sum([level.sum() for level in levels])
+            out += sum(level.sum() for level in levels)
 
         return out

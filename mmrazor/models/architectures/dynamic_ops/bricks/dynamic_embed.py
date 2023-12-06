@@ -90,13 +90,12 @@ class DynamicPatchEmbed(PatchEmbed, DynamicChannelMixin):
         """Get mask of ``embed_dims``"""
         if 'embed_dims' not in self.mutable_attrs:
             return self.projection.weight, self.projection.bias
-        else:
-            out_mask = self.mutable_embed_dims.current_mask.to(
-                self.projection.weight.device)
-            weight = self.projection.weight[out_mask][:]
-            bias = self.projection.bias[
-                out_mask] if self.projection.bias is not None else None  # noqa: E501
-            return weight, bias
+        out_mask = self.mutable_embed_dims.current_mask.to(
+            self.projection.weight.device)
+        weight = self.projection.weight[out_mask][:]
+        bias = self.projection.bias[
+            out_mask] if self.projection.bias is not None else None  # noqa: E501
+        return weight, bias
 
     def to_static_op(self: PatchEmbed) -> nn.Module:
         """Convert dynamic PatchEmbed to static PatchEmbed."""

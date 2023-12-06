@@ -21,7 +21,7 @@ class TestGroupFisherChannelUnit(unittest.TestCase):
 
         x = torch.rand([1, 3, 224, 224])
         mutator.start_record_info()
-        for i in range(2):
+        for _ in range(2):
             model.train()
             loss = model(x).sum()
             loss.backward()

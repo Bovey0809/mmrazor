@@ -107,8 +107,8 @@ class Darts(BaseAlgorithm):
         if isinstance(data, (tuple, list)) and isinstance(
                 optim_wrapper, OptimWrapperDict):
             assert len(data) == len(optim_wrapper), \
-                f'The length of data ({len(data)}) should be equal to that '\
-                f'of optimizers ({len(optim_wrapper)}).'
+                    f'The length of data ({len(data)}) should be equal to that '\
+                    f'of optimizers ({len(optim_wrapper)}).'
 
             supernet_data, mutator_data = data
 
@@ -121,7 +121,6 @@ class Darts(BaseAlgorithm):
                     mutator_log_vars = self._unrolled_backward(
                         mutator_data, supernet_data, optim_wrapper)
                 optim_wrapper['mutator'].step()
-                log_vars.update(add_prefix(mutator_log_vars, 'mutator'))
             else:
                 with optim_wrapper['mutator'].optim_context(self):
                     pseudo_data = self.data_preprocessor(mutator_data, True)
@@ -134,8 +133,7 @@ class Darts(BaseAlgorithm):
                 mutator_losses, mutator_log_vars = self.parse_losses(
                     mutator_loss)
                 optim_wrapper['mutator'].update_params(mutator_losses)
-                log_vars.update(add_prefix(mutator_log_vars, 'mutator'))
-
+            log_vars.update(add_prefix(mutator_log_vars, 'mutator'))
             # Update the parameter of supernet
             with optim_wrapper['architecture'].optim_context(self):
                 pseudo_data = self.data_preprocessor(supernet_data, True)
@@ -267,9 +265,7 @@ class Darts(BaseAlgorithm):
 
         # dalpha { L_trn(w+) }, # dalpha { L_trn(w-) }
         dalpha_pos, dalpha_neg = dalphas
-        hessian = [(p - n) / (2. * eps)
-                   for p, n in zip(dalpha_pos, dalpha_neg)]
-        return hessian
+        return [(p - n) / (2.0 * eps) for p, n in zip(dalpha_pos, dalpha_neg)]
 
 
 class BatchNormWrapper(nn.Module):
@@ -518,6 +514,4 @@ class DartsDDP(MMDistributedDataParallel):
 
         # dalpha { L_trn(w+) }, # dalpha { L_trn(w-) }
         dalpha_pos, dalpha_neg = dalphas
-        hessian = [(p - n) / (2. * eps)
-                   for p, n in zip(dalpha_pos, dalpha_neg)]
-        return hessian
+        return [(p - n) / (2.0 * eps) for p, n in zip(dalpha_pos, dalpha_neg)]

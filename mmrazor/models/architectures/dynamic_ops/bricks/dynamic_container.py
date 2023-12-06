@@ -105,5 +105,4 @@ class DynamicSequential(Sequential, DynamicMixin):
     @classmethod
     def convert_from(cls, module: Sequential):
         """Convert the static Sequential to dynamic one."""
-        dynamic_m = cls(module._modules)
-        return dynamic_m
+        return cls(module._modules)

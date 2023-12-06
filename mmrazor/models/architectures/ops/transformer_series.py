@@ -67,11 +67,10 @@ class RelativePosition2D(nn.Module):
 
         final_mat_v = torch.LongTensor(final_mat_v)
         final_mat_h = torch.LongTensor(final_mat_h)
-        # get the embeddings with the corresponding distance
-        embeddings = self.embeddings_table_v[
-            final_mat_v] + self.embeddings_table_h[final_mat_h]
-
-        return embeddings
+        return (
+            self.embeddings_table_v[final_mat_v]
+            + self.embeddings_table_h[final_mat_h]
+        )
 
 
 class MultiheadAttention(nn.Module):

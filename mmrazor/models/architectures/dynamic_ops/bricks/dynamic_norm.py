@@ -44,34 +44,28 @@ class _DynamicBatchNorm(_BatchNorm, DynamicBatchNormMixin):
         Args:
             module (:obj:`torch.nn._BatchNorm`): The original BatchNorm module.
         """
-        dynamic_bn = cls(
+        return cls(
             num_features=module.num_features,
             eps=module.eps,
             momentum=module.momentum,
             affine=module.affine,
-            track_running_stats=module.track_running_stats)
-
-        return dynamic_bn
+            track_running_stats=module.track_running_stats,
+        )
 
     def forward(self, input: Tensor) -> Tensor:
         """Forward of dynamic BatchNormxd OP."""
         self._check_input_dim(input)
 
-        if self.momentum is None:
-            exponential_average_factor = 0.0
-        else:
-            exponential_average_factor = self.momentum
-
-        if self.training and self.track_running_stats:
-            if self.num_batches_tracked is not None:  # type: ignore
+        exponential_average_factor = 0.0 if self.momentum is None else self.momentum
+        if self.num_batches_tracked is not None:
+            if self.training and self.track_running_stats:  # type: ignore
                 self.num_batches_tracked = \
-                    self.num_batches_tracked + 1  # type: ignore
-                if self.momentum is None:  # use cumulative moving average
-                    exponential_average_factor = 1.0 / float(
-                        self.num_batches_tracked)
-                else:  # use exponential moving average
-                    exponential_average_factor = self.momentum
-
+                        self.num_batches_tracked + 1  # type: ignore
+                exponential_average_factor = (
+                    1.0 / float(self.num_batches_tracked)
+                    if self.momentum is None
+                    else self.momentum
+                )
         if self.training:
             bn_training = True
         else:
@@ -103,9 +97,8 @@ class DynamicBatchNorm1d(_DynamicBatchNorm):
 
     def _check_input_dim(self, input: Tensor) -> None:
         """Check if input dimension is valid."""
-        if input.dim() != 2 and input.dim() != 3:
-            raise ValueError('expected 2D or 3D input (got {}D input)'.format(
-                input.dim()))
+        if input.dim() not in [2, 3]:
+            raise ValueError(f'expected 2D or 3D input (got {input.dim()}D input)')
 
 
 @MODELS.register_module()
@@ -120,8 +113,7 @@ class DynamicBatchNorm2d(_DynamicBatchNorm):
     def _check_input_dim(self, input: Tensor) -> None:
         """Check if input dimension is valid."""
         if input.dim() != 4:
-            raise ValueError('expected 4D input (got {}D input)'.format(
-                input.dim()))
+            raise ValueError(f'expected 4D input (got {input.dim()}D input)')
 
 
 @MODELS.register_module()
@@ -136,8 +128,7 @@ class DynamicBatchNorm3d(_DynamicBatchNorm):
     def _check_input_dim(self, input: Tensor) -> None:
         """Check if input dimension is valid."""
         if input.dim() != 5:
-            raise ValueError('expected 5D input (got {}D input)'.format(
-                input.dim()))
+            raise ValueError(f'expected 5D input (got {input.dim()}D input)')
 
 
 class SwitchableBatchNorm2d(DynamicBatchNorm2d):
@@ -169,26 +160,23 @@ class SwitchableBatchNorm2d(DynamicBatchNorm2d):
         choice_num = self.activated_channel_num()
         if choice_num == self.num_features:
             return super().forward(input)
-        else:
-            assert str(choice_num) in self.candidate_bn
-            return self.candidate_bn[str(choice_num)](input)
+        assert str(choice_num) in self.candidate_bn
+        return self.candidate_bn[str(choice_num)](input)
 
     def to_static_op(self: _BatchNorm) -> nn.Module:
         """Convert to a normal BatchNorm."""
         choice_num = self.activated_channel_num()
         if choice_num == self.num_features:
             return super().to_static_op()
-        else:
-            assert str(choice_num) in self.candidate_bn
-            return self.candidate_bn[str(choice_num)]
+        assert str(choice_num) in self.candidate_bn
+        return self.candidate_bn[str(choice_num)]
 
     # private methods
 
     def activated_channel_num(self):
         """The number of activated channels."""
         mask = self._get_num_features_mask()
-        choice_num = (mask == 1).sum().item()
-        return choice_num
+        return (mask == 1).sum().item()
 
     def _check_candidates(self, candidates: List):
         """Check if candidates aviliable."""
@@ -234,12 +222,11 @@ class DynamicLayerNorm(LayerNorm, DynamicLayerNormMixin):
         Args:
             module (:obj:`torch.nn._BatchNorm`): The original BatchNorm module.
         """
-        dynamic_ln = cls(
+        return cls(
             normalized_shape=module.normalized_shape,
             eps=module.eps,
-            elementwise_affine=module.elementwise_affine)
-
-        return dynamic_ln
+            elementwise_affine=module.elementwise_affine,
+        )
 
     def forward(self, input: Tensor) -> Tensor:
         """Slice the parameters according to `mutable_num_channels`, and
@@ -256,8 +243,7 @@ class DynamicLayerNorm(LayerNorm, DynamicLayerNormMixin):
     def _check_input_dim(self, input: Tensor) -> None:
         """Check if input dimension is valid."""
         if input.dim() != 3:
-            raise ValueError('expected 3D input (got {}D input)'.format(
-                input.dim()))
+            raise ValueError(f'expected 3D input (got {input.dim()}D input)')
 
 
 class DynamicSyncBatchNorm(nn.SyncBatchNorm, DynamicBatchNormMixin):
@@ -297,11 +283,7 @@ class DynamicSyncBatchNorm(nn.SyncBatchNorm, DynamicBatchNormMixin):
         # exponential_average_factor is set to self.momentum
         # (when it is available) only so that it gets updated
         # in ONNX graph when this node is exported to ONNX.
-        if self.momentum is None:
-            exponential_average_factor = 0.0
-        else:
-            exponential_average_factor = self.momentum
-
+        exponential_average_factor = 0.0 if self.momentum is None else self.momentum
         if self.training and self.track_running_stats:
             assert self.num_batches_tracked is not None
             self.num_batches_tracked.add_(1)
@@ -415,21 +397,16 @@ class DMCPBatchNorm2d(DynamicBatchNorm2d):
         """Forward of BatchNorm2d."""
         self._check_input_dim(input)
 
-        if self.momentum is None:
-            exponential_average_factor = 0.0
-        else:
-            exponential_average_factor = self.momentum
-
-        if self.training and self.track_running_stats:
-            if self.num_batches_tracked is not None:  # type: ignore
+        exponential_average_factor = 0.0 if self.momentum is None else self.momentum
+        if self.num_batches_tracked is not None:
+            if self.training and self.track_running_stats:  # type: ignore
                 self.num_batches_tracked = \
-                    self.num_batches_tracked + 1  # type: ignore
-                if self.momentum is None:  # use cumulative moving average
-                    exponential_average_factor = 1.0 / float(
-                        self.num_batches_tracked)
-                else:  # use exponential moving average
-                    exponential_average_factor = self.momentum
-
+                        self.num_batches_tracked + 1  # type: ignore
+                exponential_average_factor = (
+                    1.0 / float(self.num_batches_tracked)
+                    if self.momentum is None
+                    else self.momentum
+                )
         if self.training:
             bn_training = True
         else:
@@ -470,9 +447,7 @@ class DMCPBatchNorm2d(DynamicBatchNorm2d):
         tp_group_x = tp_group_x.view(num_groups, -1) * prob[:num_groups]
         tp_group_x = tp_group_x.view(size_tp_group)
 
-        out = torch.cat([tp_x[:min_ch], tp_group_x]).transpose(0,
-                                                               1).contiguous()
-        return out
+        return torch.cat([tp_x[:min_ch], tp_group_x]).transpose(0, 1).contiguous()
 
     def set_forward_args(self, arch_param: nn.Parameter,
                          arch_attr: Optional[Tuple]) -> None:

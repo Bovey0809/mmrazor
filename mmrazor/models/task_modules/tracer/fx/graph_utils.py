@@ -131,11 +131,7 @@ def del_fakequant_after_op(prepared_model,
         prepared_model = copy.deepcopy(prepared_model)
     new_graph = copy.deepcopy(prepared_model.graph)
 
-    target_nodes = []
-    for node in new_graph.nodes:
-        if node.op in target_ops:
-            target_nodes.append(node)
-
+    target_nodes = [node for node in new_graph.nodes if node.op in target_ops]
     for node in new_graph.nodes:
         if node.op == 'call_module' and isinstance(
                 _get_attrs(prepared_model, node.target), FakeQuantizeBase):
@@ -210,11 +206,11 @@ def del_fakequant_after_method(prepared_model,
         prepared_model = copy.deepcopy(prepared_model)
     new_graph = copy.deepcopy(prepared_model.graph)
 
-    target_nodes = []
-    for node in new_graph.nodes:
-        if node.op == 'call_method' and node.target in method_patterns:
-            target_nodes.append(node)
-
+    target_nodes = [
+        node
+        for node in new_graph.nodes
+        if node.op == 'call_method' and node.target in method_patterns
+    ]
     for node in new_graph.nodes:
         if node.op == 'call_module' and isinstance(
                 _get_attrs(prepared_model, node.target), FakeQuantizeBase):
@@ -289,11 +285,11 @@ def del_fakequant_after_function(prepared_model,
         prepared_model = copy.deepcopy(prepared_model)
     new_graph = copy.deepcopy(prepared_model.graph)
 
-    target_nodes = []
-    for node in new_graph.nodes:
-        if node.op == 'call_function' and node.target in function_patterns:
-            target_nodes.append(node)
-
+    target_nodes = [
+        node
+        for node in new_graph.nodes
+        if node.op == 'call_function' and node.target in function_patterns
+    ]
     for node in new_graph.nodes:
         if node.op == 'call_module' and isinstance(
                 _get_attrs(prepared_model, node.target), FakeQuantizeBase):
@@ -365,12 +361,14 @@ def del_fakequant_after_module(prepared_model,
     if not inplace:
         prepared_model = copy.deepcopy(prepared_model)
     new_graph = copy.deepcopy(prepared_model.graph)
-    target_nodes = []
-    for node in new_graph.nodes:
-        if node.op == 'call_module' and isinstance(
-                _get_attrs(prepared_model, node.target), module_patterns):
-            target_nodes.append(node)
-
+    target_nodes = [
+        node
+        for node in new_graph.nodes
+        if node.op == 'call_module'
+        and isinstance(
+            _get_attrs(prepared_model, node.target), module_patterns
+        )
+    ]
     for node in new_graph.nodes:
         if node.op == 'call_module' and isinstance(
                 _get_attrs(prepared_model, node.target), FakeQuantizeBase):

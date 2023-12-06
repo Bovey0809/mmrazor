@@ -245,21 +245,19 @@ def print_model_with_flops_params(model,
         """Accumulate params by recursion."""
         if is_supported_instance(self):
             return self.__params__
-        else:
-            sum = 0
-            for m in self.children():
-                sum += m.accumulate_params()
-            return sum
+        sum = 0
+        for m in self.children():
+            sum += m.accumulate_params()
+        return sum
 
     def accumulate_flops(self):
         """Accumulate flops by recursion."""
         if is_supported_instance(self):
             return self.__flops__ / model.__batch_counter__
-        else:
-            sum = 0
-            for m in self.children():
-                sum += m.accumulate_flops()
-            return sum
+        sum = 0
+        for m in self.children():
+            sum += m.accumulate_flops()
+        return sum
 
     def flops_repr(self):
         """A new extra_repr method of the input module."""
@@ -318,21 +316,19 @@ def accumulate_sub_module_flops_params(model, units=None):
         """Accumulate params by recursion."""
         if is_supported_instance(module):
             return module.__params__
-        else:
-            sum = 0
-            for m in module.children():
-                sum += accumulate_params(m)
-            return sum
+        sum = 0
+        for m in module.children():
+            sum += accumulate_params(m)
+        return sum
 
     def accumulate_flops(module):
         """Accumulate flops by recursion."""
         if is_supported_instance(module):
             return module.__flops__ / model.__batch_counter__
-        else:
-            sum = 0
-            for m in module.children():
-                sum += accumulate_flops(m)
-            return sum
+        sum = 0
+        for m in module.children():
+            sum += accumulate_flops(m)
+        return sum
 
     for module in model.modules():
         _flops = accumulate_flops(module)
@@ -353,8 +349,7 @@ def get_model_parameters_number(model):
     Returns:
         float: Parameter number of the model.
     """
-    num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    return num_params
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 def add_flops_params_counting_methods(net_main_module):
@@ -410,18 +405,17 @@ def start_flops_params_count(self, disabled_counters):
             if hasattr(module, '__flops_params_handle__'):
                 return
 
-            else:
-                counter_type = get_counter_type(module)
-                if (disabled_counters is None
-                        or counter_type not in disabled_counters):
-                    counter = TASK_UTILS.build(
-                        dict(type=counter_type, _scope_='mmrazor'))
-                    handle = module.register_forward_hook(
-                        counter.add_count_hook)
+            counter_type = get_counter_type(module)
+            if (disabled_counters is None
+                    or counter_type not in disabled_counters):
+                counter = TASK_UTILS.build(
+                    dict(type=counter_type, _scope_='mmrazor'))
+                handle = module.register_forward_hook(
+                    counter.add_count_hook)
 
-                    module.__flops_params_handle__ = handle
-                else:
-                    return
+                module.__flops_params_handle__ = handle
+            else:
+                return
 
     self.apply(partial(add_flops_params_counter_hook_function))
 
@@ -477,9 +471,7 @@ def batch_counter_hook(module, input, output):
         batch_size = len(input)
     else:
         global no_positional_input_warned
-        if no_positional_input_warned:
-            pass
-        else:
+        if not no_positional_input_warned:
             print('Warning! No positional inputs found for a module, '
                   'assuming batch size is 1.')
             no_positional_input_warned = True
@@ -517,13 +509,13 @@ def get_counter_type(module) -> str:
     Returns:
         str: Counter type (or the base counter type) of the current module.
     """
-    counter_type = module.__class__.__name__ + 'Counter'
+    counter_type = f'{module.__class__.__name__}Counter'
     if counter_type not in TASK_UTILS._module_dict.keys():
         old_counter_type = counter_type
         assert nn.Module in module.__class__.mro()
         for base_cls in module.__class__.mro():
             if base_cls in get_modules_list():
-                counter_type = base_cls.__name__ + 'Counter'
+                counter_type = f'{base_cls.__name__}Counter'
                 global counter_warning_list
                 if old_counter_type not in counter_warning_list:
                     from mmengine import MMLogger
@@ -537,9 +529,7 @@ def get_counter_type(module) -> str:
 
 def is_supported_instance(module):
     """Judge whether the module is in TASK_UTILS registry or not."""
-    if get_counter_type(module) in TASK_UTILS._module_dict.keys():
-        return True
-    return False
+    return get_counter_type(module) in TASK_UTILS._module_dict.keys()
 
 
 def remove_flops_params_counter_hook_function(module):

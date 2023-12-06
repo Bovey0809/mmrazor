@@ -61,30 +61,28 @@ class ChannelElem:
         """Get the hash of the owning ChannelElems set."""
         if self._hash_cache is not None:
             return self._hash_cache
-        else:
-            tensor_list = list(self.owing_elem_set)
-            tensor_set = set([elem.owing_tensor for elem in tensor_list])
-            frozen_set = frozenset(tensor_set)
-            hash = frozen_set.__hash__()
-            for elem in self.owing_elem_set:
-                assert elem._hash_cache is None
-                elem._hash_cache = hash
-            return hash
+        tensor_list = list(self.owing_elem_set)
+        tensor_set = {elem.owing_tensor for elem in tensor_list}
+        frozen_set = frozenset(tensor_set)
+        hash = frozen_set.__hash__()
+        for elem in self.owing_elem_set:
+            assert elem._hash_cache is None
+            elem._hash_cache = hash
+        return hash
 
     @property
     def min_elem_set_index(self):
         """Minimal index in ChannelTensors."""
         if self._min_elem_set_index_cache is not None:
             return self._min_elem_set_index_cache
-        else:
-            elem_set = self.owing_elem_set
-            min_index = int(pow(2, 32))
-            for elem in elem_set:
-                min_index = min(min_index, elem.index_in_tensoor)
-            for elem in elem_set:
-                assert elem._min_elem_set_index_cache is None
-                elem._min_elem_set_index_cache = min_index
-            return min_index
+        elem_set = self.owing_elem_set
+        min_index = int(pow(2, 32))
+        for elem in elem_set:
+            min_index = min(min_index, elem.index_in_tensoor)
+        for elem in elem_set:
+            assert elem._min_elem_set_index_cache is None
+            elem._min_elem_set_index_cache = min_index
+        return min_index
 
     # work as a disjoint set
 
@@ -93,11 +91,10 @@ class ChannelElem:
         """Get root of the owing ChannelElem set."""
         if self._parent is None:
             return self
-        else:
-            root = self._parent.root
-            self._unset_parent()
-            self._set_parent(root)
-            return root
+        root = self._parent.root
+        self._unset_parent()
+        self._set_parent(root)
+        return root
 
     @property
     def subs(self):
@@ -159,9 +156,8 @@ class ChannelTensor:
         """Expand self ChannelTensor."""
         new_tensor = ChannelTensor(expand_ratio * len(self))
 
-        for i in range(len(self)):
-            for j in range(expand_ratio):
-                self[i].union(new_tensor[i * expand_ratio + j])
+        for i, j in itertools.product(range(len(self)), range(expand_ratio)):
+            self[i].union(new_tensor[i * expand_ratio + j])
         return new_tensor
 
     # hash operation
@@ -169,9 +165,9 @@ class ChannelTensor:
     @property
     def elems_hash_with_index(self):
         """Return hash of the ChannelElems in the ChannelTensor with index."""
-        elem_hashes = [(elem.elem_set_hash, elem.min_elem_set_index)
-                       for elem in self.elems]
-        return elem_hashes
+        return [
+            (elem.elem_set_hash, elem.min_elem_set_index) for elem in self.elems
+        ]
 
     @property
     def elems_hash_dict(self):
@@ -206,8 +202,7 @@ class ChannelTensor:
         return len(self.elems)
 
     def __iter__(self):
-        for e in self.elems:
-            yield e
+        yield from self.elems
 
     def __add__(self, tensor: 'ChannelTensor'):
         return ChannelTensor.cat([self, tensor])

@@ -43,8 +43,7 @@ def hacky_init_weights_wrapper(fix_subnet):
         if dist.get_rank() == 0:
             try:
                 work_dir = RuntimeInfo.work_dir()
-                fileio.dump(
-                    fix_subnet, work_dir + '/fix_subnet.json', indent=4)
+                fileio.dump(fix_subnet, f'{work_dir}/fix_subnet.json', indent=4)
                 print_log(
                     f'save pruning structure in {work_dir}/fix_subnet.json')
             except Exception:

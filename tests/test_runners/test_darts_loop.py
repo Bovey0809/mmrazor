@@ -22,11 +22,9 @@ class ToyDataPreprocessor(BaseDataPreprocessor):
     def collate_data(self, data):
         data = [_data[0] for _data in data]
         inputs = [_data['inputs'].to(self._device) for _data in data]
-        batch_data_samples = []
-        # Model can get predictions without any data samples.
-        for _data in data:
-            if 'data_samples' in _data:
-                batch_data_samples.append(_data['data_samples'])
+        batch_data_samples = [
+            _data['data_samples'] for _data in data if 'data_samples' in _data
+        ]
         # Move data from CPU to corresponding device.
         batch_data_samples = [
             data_sample.to(self._device) for data_sample in batch_data_samples
@@ -174,13 +172,13 @@ class TestDartsLoop(TestCase):
     def test_run(self):
         # 1. test DartsEpochBasedTrainLoop
         epoch_results = []
-        epoch_targets = [i for i in range(3)]
+        epoch_targets = list(range(3))
         iter_results = []
-        iter_targets = [i for i in range(4 * 3)]
+        iter_targets = list(range(4 * 3))
         batch_idx_results = []
-        batch_idx_targets = [i for i in range(4)] * 3  # train and val
+        batch_idx_targets = list(range(4)) * 3
         val_epoch_results = []
-        val_epoch_targets = [i for i in range(2, 4)]
+        val_epoch_targets = list(range(2, 4))
 
         @HOOKS.register_module()
         class TestEpochHook(Hook):
@@ -217,10 +215,10 @@ class TestDartsLoop(TestCase):
         batch_idx_results = []
         val_iter_results = []
         val_batch_idx_results = []
-        iter_targets = [i for i in range(12)]
-        batch_idx_targets = [i for i in range(12)]
-        val_iter_targets = [i for i in range(4, 12)]
-        val_batch_idx_targets = [i for i in range(4)] * 2
+        iter_targets = list(range(12))
+        batch_idx_targets = list(range(12))
+        val_iter_targets = list(range(4, 12))
+        val_batch_idx_targets = list(range(4)) * 2
 
         @HOOKS.register_module()
         class TestIterHook(Hook):

@@ -65,10 +65,10 @@ class GroupMixin():
 
     def is_supported_mutable(self, module):
         """Judge whether is a supported mutable."""
-        for mutable_type in [MutableModule, MutableValue]:
-            if isinstance(module, mutable_type):
-                return True
-        return False
+        return any(
+            isinstance(module, mutable_type)
+            for mutable_type in [MutableModule, MutableValue]
+        )
 
     def _build_name_mutable_mapping(
             self, supernet: Module) -> Dict[str, MUTABLE_TYPE]:
@@ -134,7 +134,7 @@ class GroupMixin():
         alias2mutable_names = self._build_alias_names_mapping(supernet)
 
         # Check whether the custom group is valid
-        if len(custom_groups) > 0:
+        if custom_groups:
             self._check_valid_groups(alias2mutable_names, name2mutable,
                                      custom_groups)
 
@@ -142,10 +142,10 @@ class GroupMixin():
         search_groups: Dict[str, List[MUTABLE_TYPE]] = dict()
 
         current_group_nums = 0
-        grouped_mutable_names: List[str] = list()
-        grouped_alias: List[str] = list()
+        grouped_mutable_names: List[str] = []
+        grouped_alias: List[str] = []
         for group in custom_groups:
-            group_mutables = list()
+            group_mutables = []
             for item in group:
                 if item in alias2mutable_names:
                     # if the item is from alias name
@@ -161,23 +161,21 @@ class GroupMixin():
 
             # TODO: fix prefix when constructing custom groups.
             prefix = name2mutable[item].mutable_prefix
-            group_name = prefix + '_' + str(current_group_nums)
+            group_name = f'{prefix}_{str(current_group_nums)}'
             search_groups[group_name] = group_mutables
             current_group_nums += 1
 
         # Construct search_groups based on alias
         for alias, mutable_names in alias2mutable_names.items():
             if alias not in grouped_alias:
-                # Check whether all current names are already grouped
-                flag_all_grouped = True
-                for mutable_name in mutable_names:
-                    if mutable_name not in grouped_mutable_names:
-                        flag_all_grouped = False
-
+                flag_all_grouped = all(
+                    mutable_name in grouped_mutable_names
+                    for mutable_name in mutable_names
+                )
                 # If not all mutables are already grouped
                 if not flag_all_grouped:
                     prefix = name2mutable[mutable_names[0]].mutable_prefix
-                    group_name = prefix + '_' + str(current_group_nums)
+                    group_name = f'{prefix}_{str(current_group_nums)}'
                     search_groups[group_name] = []
                     for mutable_name in mutable_names:
                         if mutable_name not in grouped_mutable_names:
@@ -193,33 +191,26 @@ class GroupMixin():
                     continue
                 else:
                     prefix = module.mutable_prefix
-                    group_name = prefix + '_' + str(current_group_nums)
+                    group_name = f'{prefix}_{str(current_group_nums)}'
                     search_groups[group_name] = [module]
                     current_group_nums += 1
             elif hasattr(module, 'source_mutables'):
                 for each_mutable in module.source_mutables:
-                    if self.is_supported_mutable(each_mutable):
-                        if name in grouped_mutable_names:
-                            continue
-                        else:
+                    if name not in grouped_mutable_names:
+                        if self.is_supported_mutable(each_mutable):
                             prefix = each_mutable.mutable_prefix
-                            group_name = prefix + '_' + str(current_group_nums)
+                            group_name = f'{prefix}_{str(current_group_nums)}'
                             search_groups[group_name] = [each_mutable]
                             current_group_nums += 1
 
         grouped_counter = Counter(grouped_mutable_names)
 
-        # find duplicate keys
-        duplicate_keys = list()
-        for key, count in grouped_counter.items():
-            if count > 1:
-                duplicate_keys.append(key)
-
+        duplicate_keys = [key for key, count in grouped_counter.items() if count > 1]
         assert len(grouped_mutable_names) == len(
             list(set(grouped_mutable_names))), \
-            'There are duplicate keys in grouped mutable names. ' \
-            f'The duplicate keys are {duplicate_keys}. ' \
-            'Please check if there are duplicate keys in the `custom_group`.'
+                'There are duplicate keys in grouped mutable names. ' \
+                f'The duplicate keys are {duplicate_keys}. ' \
+                'Please check if there are duplicate keys in the `custom_group`.'
 
         return search_groups
 
@@ -244,12 +235,9 @@ class GroupMixin():
 
         # when the mutable has alias attribute, the corresponding module
         # name should not be used in `custom_group`.
-        used_aliases = list()
+        used_aliases = []
         for group in custom_group:
-            for key in group:
-                if key in aliases:
-                    used_aliases.append(key)
-
+            used_aliases.extend(key for key in group if key in aliases)
         for alias_key in used_aliases:
             mutable_names: List = alias2mutable_names[alias_key]
             # check whether module name is in custom group

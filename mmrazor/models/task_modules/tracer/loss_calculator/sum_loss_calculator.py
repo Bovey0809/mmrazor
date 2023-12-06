@@ -27,7 +27,7 @@ class SumPseudoLoss:
         """Get a loss by summing all tensors."""
         if isinstance(tensor, torch.Tensor):
             return tensor.sum()
-        elif isinstance(tensor, list) or isinstance(tensor, tuple):
+        elif isinstance(tensor, (list, tuple)):
             loss = 0
             for t in tensor:
                 loss = loss + self._sum_of_output(t)

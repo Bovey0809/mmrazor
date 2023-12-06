@@ -25,8 +25,7 @@ class FTLoss(nn.Module):
     def forward_train(self, s_feature: torch.Tensor,
                       t_feature: torch.Tensor) -> torch.Tensor:
         """loss computation func."""
-        loss = self.criterion(self.factor(s_feature), self.factor(t_feature))
-        return loss
+        return self.criterion(self.factor(s_feature), self.factor(t_feature))
 
     def forward(self, s_feature: torch.Tensor,
                 t_feature: torch.Tensor) -> torch.Tensor:

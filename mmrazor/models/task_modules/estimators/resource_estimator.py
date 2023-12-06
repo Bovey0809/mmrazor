@@ -86,10 +86,7 @@ class ResourceEstimator(BaseEstimator):
             if unit_key not in ['flops', 'params', 'latency']:
                 raise KeyError(f'Got invalid key `{unit_key}` in units. ',
                                'Should be `flops`, `params` or `latency`.')
-        if flops_params_cfg:
-            self.flops_params_cfg = flops_params_cfg
-        else:
-            self.flops_params_cfg = dict()
+        self.flops_params_cfg = flops_params_cfg if flops_params_cfg else dict()
         self.latency_cfg = latency_cfg if latency_cfg else dict()
 
     def estimate(self,
@@ -115,7 +112,7 @@ class ResourceEstimator(BaseEstimator):
                 results(FLOPs, params and latency).
         """
         resource_metrics = dict()
-        measure_latency = True if latency_cfg else False
+        measure_latency = bool(latency_cfg)
 
         if flops_params_cfg:
             flops_params_cfg = {**self.flops_params_cfg, **flops_params_cfg}
@@ -176,9 +173,7 @@ class ResourceEstimator(BaseEstimator):
             f'`estimate_separation_modules` of {self.__class__.__name__} ')
 
         model.eval()
-        spec_modules_resources = get_model_flops_params(
-            model, **flops_params_cfg)
-        return spec_modules_resources
+        return get_model_flops_params(model, **flops_params_cfg)
 
     def _check_flops_params_cfg(self, flops_params_cfg: dict) -> None:
         """Check the legality of ``flops_params_cfg``.

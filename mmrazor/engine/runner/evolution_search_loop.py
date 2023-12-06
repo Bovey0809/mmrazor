@@ -114,11 +114,7 @@ class EvolutionSearchLoop(EpochBasedTrainLoop, CalibrateBNMixin):
 
         self.top_k_candidates = Candidates()
 
-        if self.runner.distributed:
-            self.model = runner.model.module
-        else:
-            self.model = runner.model
-
+        self.model = runner.model.module if self.runner.distributed else runner.model
         # initialize estimator
         estimator_cfg = dict() if estimator_cfg is None else estimator_cfg
         if 'type' not in estimator_cfg:
@@ -131,7 +127,7 @@ class EvolutionSearchLoop(EpochBasedTrainLoop, CalibrateBNMixin):
         if self.predictor_cfg is not None:
             self.predictor_cfg['score_key'] = self.score_key
             self.predictor_cfg['search_groups'] = \
-                self.model.mutator.search_groups
+                    self.model.mutator.search_groups
             self.predictor = TASK_UTILS.build(self.predictor_cfg)
 
     def run(self) -> None:
@@ -207,7 +203,7 @@ class EvolutionSearchLoop(EpochBasedTrainLoop, CalibrateBNMixin):
         else:
             self.candidates = Candidates([dict(a=0)] * self.num_candidates)
 
-        if len(candidates_resources) > 0:
+        if candidates_resources:
             self.candidates.update_resources(
                 candidates_resources,
                 start=len(self.candidates.data) - len(candidates_resources))
@@ -286,15 +282,13 @@ class EvolutionSearchLoop(EpochBasedTrainLoop, CalibrateBNMixin):
         """Mutate with the specified mutate_prob."""
         candidate1 = random.choice(self.top_k_candidates.subnets)
         candidate2 = self.model.mutator.sample_choices()
-        candidate = crossover(candidate1, candidate2, prob=self.mutate_prob)
-        return candidate
+        return crossover(candidate1, candidate2, prob=self.mutate_prob)
 
     def _crossover(self) -> SupportRandomSubnet:
         """Crossover."""
         candidate1 = random.choice(self.top_k_candidates.subnets)
         candidate2 = random.choice(self.top_k_candidates.subnets)
-        candidate = crossover(candidate1, candidate2, prob=self.crossover_prob)
-        return candidate
+        return crossover(candidate1, candidate2, prob=self.crossover_prob)
 
     def _resume(self):
         """Resume searching."""
@@ -346,7 +340,7 @@ class EvolutionSearchLoop(EpochBasedTrainLoop, CalibrateBNMixin):
         """
         if use_predictor:
             assert self.predictor is not None
-            metrics = self.predictor.predict(self.model)
+            return self.predictor.predict(self.model)
         else:
             if self.calibrate_sample_num > 0:
                 self.calibrate_bn_statistics(self.runner.train_dataloader,
@@ -356,8 +350,7 @@ class EvolutionSearchLoop(EpochBasedTrainLoop, CalibrateBNMixin):
                 outputs = self.runner.model.val_step(data_batch)
                 self.evaluator.process(
                     data_samples=outputs, data_batch=data_batch)
-            metrics = self.evaluator.evaluate(len(self.dataloader.dataset))
-        return metrics
+            return self.evaluator.evaluate(len(self.dataloader.dataset))
 
     def _save_searcher_ckpt(self) -> None:
         """Save searcher ckpt, which is different from common ckpt.
@@ -365,27 +358,28 @@ class EvolutionSearchLoop(EpochBasedTrainLoop, CalibrateBNMixin):
         It mainly contains the candicate pool, the top-k candicates with scores
         and the current epoch.
         """
-        if self.runner.rank == 0:
-            save_for_resume = dict()
-            save_for_resume['_epoch'] = self._epoch
-            for k in ['candidates', 'top_k_candidates']:
-                save_for_resume[k] = getattr(self, k)
-            fileio.dump(
-                save_for_resume,
-                osp.join(self.runner.work_dir,
-                         f'search_epoch_{self._epoch}.pkl'))
-            self.runner.logger.info(
-                f'Epoch:[{self._epoch}/{self._max_epochs}], top1_score: '
-                f'{self.top_k_candidates.scores[0]}')
+        if self.runner.rank != 0:
+            return
+        save_for_resume = dict()
+        save_for_resume['_epoch'] = self._epoch
+        for k in ['candidates', 'top_k_candidates']:
+            save_for_resume[k] = getattr(self, k)
+        fileio.dump(
+            save_for_resume,
+            osp.join(self.runner.work_dir,
+                     f'search_epoch_{self._epoch}.pkl'))
+        self.runner.logger.info(
+            f'Epoch:[{self._epoch}/{self._max_epochs}], top1_score: '
+            f'{self.top_k_candidates.scores[0]}')
 
-            if self.max_keep_ckpts > 0:
-                cur_ckpt = self._epoch + 1
-                redundant_ckpts = range(1, cur_ckpt - self.max_keep_ckpts)
-                for _step in redundant_ckpts:
-                    ckpt_path = osp.join(self.runner.work_dir,
-                                         f'search_epoch_{_step}.pkl')
-                    if osp.isfile(ckpt_path):
-                        os.remove(ckpt_path)
+        if self.max_keep_ckpts > 0:
+            cur_ckpt = self._epoch + 1
+            redundant_ckpts = range(1, cur_ckpt - self.max_keep_ckpts)
+            for _step in redundant_ckpts:
+                ckpt_path = osp.join(self.runner.work_dir,
+                                     f'search_epoch_{_step}.pkl')
+                if osp.isfile(ckpt_path):
+                    os.remove(ckpt_path)
 
     def _check_constraints(
             self, random_subnet: SupportRandomSubnet) -> Tuple[bool, Dict]:
@@ -428,9 +422,10 @@ class EvolutionSearchLoop(EpochBasedTrainLoop, CalibrateBNMixin):
                 self.update_candidates_scores()
                 self.num_candidates = temp_num_candidates
 
-            inputs = []
-            for candidate in self.candidates.subnets:
-                inputs.append(self.predictor.model2vector(candidate))
+            inputs = [
+                self.predictor.model2vector(candidate)
+                for candidate in self.candidates.subnets
+            ]
             inputs = np.array(inputs)
             labels = np.array(self.candidates.scores)
             self.predictor.fit(inputs, labels)

@@ -25,20 +25,11 @@ def get_shape(tensor, only_length=False):
             Defaults to False.
     """
     if isinstance(tensor, torch.Tensor):
-        if only_length:
-            return len(tensor.shape)
-        else:
-            return tensor.shape
-    elif isinstance(tensor, list) or isinstance(tensor, tuple):
-        shapes = []
-        for x in tensor:
-            shapes.append(get_shape(x, only_length))
-        return shapes
+        return len(tensor.shape) if only_length else tensor.shape
+    elif isinstance(tensor, (list, tuple)):
+        return [get_shape(x, only_length) for x in tensor]
     elif isinstance(tensor, dict):
-        shapes = {}
-        for key in tensor:
-            shapes[key] = get_shape(tensor[key], only_length)
-        return shapes
+        return {key: get_shape(tensor[key], only_length) for key in tensor}
     else:
         raise NotImplementedError(
             f'unsuppored type{type(tensor)} to get shape of tensors.')

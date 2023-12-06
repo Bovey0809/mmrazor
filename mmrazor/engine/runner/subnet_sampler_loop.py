@@ -39,10 +39,7 @@ class BaseSamplerTrainLoop(IterBasedTrainLoop):
                  val_interval: int = 1000):
         super().__init__(runner, dataloader, max_iters, val_begin,
                          val_interval)
-        if self.runner.distributed:
-            self.model = runner.model.module
-        else:
-            self.model = runner.model
+        self.model = runner.model.module if self.runner.distributed else runner.model
 
     @abstractmethod
     def sample_subnet(self) -> SupportRandomSubnet:
@@ -163,7 +160,7 @@ class GreedySamplerTrainLoop(BaseSamplerTrainLoop):
         self.num_candidates = num_candidates
         self.num_samples = num_samples
         self.top_k = top_k
-        assert prob_schedule in ['linear', 'consine']
+        assert prob_schedule in {'linear', 'consine'}
         self.prob_schedule = prob_schedule
         self.schedule_start_iter = schedule_start_iter
         self.schedule_end_iter = schedule_end_iter
@@ -222,7 +219,7 @@ class GreedySamplerTrainLoop(BaseSamplerTrainLoop):
             self.update_cur_prob(cur_iter=self._iter)
 
             sampled_candidates, num_sample_from_supernet = \
-                self.get_candidates_with_sample(num_samples=self.num_samples)
+                    self.get_candidates_with_sample(num_samples=self.num_samples)
 
             self.candidates.extend(sampled_candidates)
 
@@ -234,8 +231,8 @@ class GreedySamplerTrainLoop(BaseSamplerTrainLoop):
             self.top_k_candidates = Candidates(
                 self.candidates.data[:self.top_k])
 
-            top1_score = self.top_k_candidates.scores[0]
             if (self._iter % self.val_interval) < self.top_k:
+                top1_score = self.top_k_candidates.scores[0]
                 self.runner.logger.info(
                     f'GreedySampler: [{self._iter:>6d}] '
                     f'prob {self.cur_prob:.3f} '
@@ -302,19 +299,16 @@ class GreedySamplerTrainLoop(BaseSamplerTrainLoop):
         for data_batch in self.dataloader_val:
             outputs = self.runner.model.val_step(data_batch)
             self.evaluator.process(data_samples=outputs, data_batch=data_batch)
-        metrics = self.evaluator.evaluate(len(self.dataloader_val.dataset))
-        return metrics
+        return self.evaluator.evaluate(len(self.dataloader_val.dataset))
 
     def _sample_from_supernet(self) -> SupportRandomSubnet:
         """Sample from the supernet."""
-        subnet = self.model.sample_subnet()
-        return subnet
+        return self.model.sample_subnet()
 
     def _sample_from_candidates(self) -> SupportRandomSubnet:
         """Sample from the candidates."""
         assert len(self.candidates) > 0
-        subnet = random.choice(self.candidates.data)
-        return subnet
+        return random.choice(self.candidates.data)
 
     def _check_constraints(self, random_subnet: SupportRandomSubnet):
         """Check whether is beyond constraints.

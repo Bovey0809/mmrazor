@@ -11,8 +11,7 @@ def parse_args():
     parser.add_argument('checkpoint', help='input checkpoint filename')
     parser.add_argument(
         '--inplace', action='store_true', help='replace origin ckpt')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def main():

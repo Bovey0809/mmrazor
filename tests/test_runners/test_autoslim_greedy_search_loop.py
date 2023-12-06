@@ -59,8 +59,11 @@ MUTATOR_CFG = dict(
     channel_unit_cfg=dict(
         type='OneShotMutableChannelUnit',
         default_args=dict(
-            candidate_choices=list(i / 12 for i in range(2, 13)),
-            choice_mode='ratio')))
+            candidate_choices=[i / 12 for i in range(2, 13)],
+            choice_mode='ratio',
+        ),
+    ),
+)
 
 DISTILLER_CFG = dict(
     type='ConfigurableDistiller',
@@ -90,15 +93,15 @@ class Net(nn.Module):
         self.conv = nn.Conv2d(3, 100, 3)
 
     def forward(self, x):
-        out = F.conv2d(
+        return F.conv2d(
             x,
             weight=self.conv.weight,
             bias=self.conv.bias,
             stride=self.conv.stride,
             padding=self.conv.padding,
             dilation=self.conv.dilation,
-            groups=self.conv.groups)
-        return out
+            groups=self.conv.groups,
+        )
 
 
 class ToyRunner:

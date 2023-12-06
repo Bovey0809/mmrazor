@@ -51,11 +51,11 @@ class TestChannelTensor(unittest.TestCase):
         ChannelTensor.union_two(tensor_cat1, tensor_cat2)
         self.assertUionedTensor(tensor_cat1, tensor_cat2)
 
-        self.assertUionedTensor(tensor_cat1[0:4], tensor3[0:4])
-        self.assertUionedTensor(tensor_cat1[4:8], tensor4[0:4])
+        self.assertUionedTensor(tensor_cat1[:4], tensor3[:4])
+        self.assertUionedTensor(tensor_cat1[4:8], tensor4[:4])
         self.assertUionedTensor(tensor_cat1[8:16], tensor4[4:12])
 
-        self.assertUionedTensor(tensor_cat2[0:4], tensor1[0:4])
+        self.assertUionedTensor(tensor_cat2[:4], tensor1[:4])
         self.assertUionedTensor(tensor_cat2[4:8], tensor1[4:8])
         self.assertUionedTensor(tensor_cat2[8:], tensor2)
 

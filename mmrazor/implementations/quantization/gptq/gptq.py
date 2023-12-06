@@ -76,19 +76,18 @@ class GPTQMixIn(ModuleProtocol):
     @property
     def hessian(self):
         """hessian always return float."""
-        if dist.is_initialized():
-            if dist.get_rank() == 0:
-                assert self._hessian is not None, 'hessian is not initialized.'
-                hessian = self._hessian.to(self.weight_matrix.device)
-            else:
-                hessian = torch.zeros(
-                    self.columns,
-                    self.columns,
-                    device=self.weight_matrix.device)
-            dist.broadcast(hessian, 0)
-            return hessian
-        else:
+        if not dist.is_initialized():
             return self._hessian
+        if dist.get_rank() == 0:
+            assert self._hessian is not None, 'hessian is not initialized.'
+            hessian = self._hessian.to(self.weight_matrix.device)
+        else:
+            hessian = torch.zeros(
+                self.columns,
+                self.columns,
+                device=self.weight_matrix.device)
+        dist.broadcast(hessian, 0)
+        return hessian
 
     @hessian.setter
     def hessian(self, value: torch.Tensor):
@@ -165,12 +164,13 @@ class GPTQMixIn(ModuleProtocol):
         if self.bias is not None:
             self.bias.half()
 
-        intweight = []
-        for idx in range(self.in_features):
-            intweight.append(
-                torch.round(
-                    (self.weight.data[:, idx] + scale_zeros[self.g_idx[idx]]) /
-                    self.scales[self.g_idx[idx]]).to(torch.int)[:, None])
+        intweight = [
+            torch.round(
+                (self.weight.data[:, idx] + scale_zeros[self.g_idx[idx]])
+                / self.scales[self.g_idx[idx]]
+            ).to(torch.int)[:, None]
+            for idx in range(self.in_features)
+        ]
         intweight = torch.cat(intweight, dim=1)
         intweight = intweight.t().contiguous()
         intweight = intweight.cpu().numpy().astype(np.uint32)
@@ -180,14 +180,13 @@ class GPTQMixIn(ModuleProtocol):
         i = 0
         row = 0
         while row < qweight.shape[0]:
-            if self.bits in [2, 4, 8]:
-                for j in range(i, i + (32 // self.bits)):
-                    qweight[row] |= intweight[j] << (self.bits * (j - i))
-                i += 32 // self.bits
-                row += 1
-            else:
+            if self.bits not in [2, 4, 8]:
                 raise NotImplementedError('Only 2,4,8 bits are supported.')
 
+            for j in range(i, i + (32 // self.bits)):
+                qweight[row] |= intweight[j] << (self.bits * (j - i))
+            i += 32 // self.bits
+            row += 1
         qweight = qweight.astype(np.int32)
         self.qweight = torch.from_numpy(qweight).to(self.weight.device)
 
@@ -198,14 +197,13 @@ class GPTQMixIn(ModuleProtocol):
         i = 0
         col = 0
         while col < qzeros.shape[1]:
-            if self.bits in [2, 4, 8]:
-                for j in range(i, i + (32 // self.bits)):
-                    qzeros[:, col] |= zeros[:, j] << (self.bits * (j - i))
-                i += 32 // self.bits
-                col += 1
-            else:
+            if self.bits not in [2, 4, 8]:
                 raise NotImplementedError('Only 2,4,8 bits are supported.')
 
+            for j in range(i, i + (32 // self.bits)):
+                qzeros[:, col] |= zeros[:, j] << (self.bits * (j - i))
+            i += 32 // self.bits
+            col += 1
         qzeros = qzeros.astype(np.int32)
         self.qzeros = torch.from_numpy(qzeros).to(self.weight.device)
 
@@ -301,7 +299,7 @@ class GPTQMixIn(ModuleProtocol):
                 Q = Q[:, invperm]
                 g_idx = g_idx[invperm]
 
-            if scale == []:
+            if not scale:
                 scale.append(quantizer.scale)
                 zero.append(quantizer.zero)
             scale = torch.cat(scale, dim=1)

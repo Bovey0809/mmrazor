@@ -11,7 +11,7 @@ from PIL import Image, ImageEnhance, ImageOps
 
 from mmrazor.registry import TRANSFORMS
 
-_PIL_VER = tuple([int(x) for x in PIL.__version__.split('.')[:2]])
+_PIL_VER = tuple(int(x) for x in PIL.__version__.split('.')[:2])
 
 _FILL = (128, 128, 128)
 
@@ -158,12 +158,11 @@ def solarize_add(img, add, thresh=128, **__):
             lut.append(min(255, i + add))
         else:
             lut.append(i)
-    if img.mode in ('L', 'RGB'):
-        if img.mode == 'RGB' and len(lut) == 256:
-            lut = lut + lut + lut
-        return img.point(lut)
-    else:
+    if img.mode not in ('L', 'RGB'):
         return img
+    if img.mode == 'RGB' and len(lut) == 256:
+        lut = lut + lut + lut
+    return img.point(lut)
 
 
 def posterize(img, bits_to_keep, **__):
@@ -246,7 +245,7 @@ class AutoAugmentOp(BaseTransform):
         self._get_magnitude(name)
 
     def _get_magnitude(self, name):
-        if name == 'AutoContrast' or name == 'Equalize' or name == 'Invert':
+        if name in ['AutoContrast', 'Equalize', 'Invert']:
             self.level_fn = self.pass_fn
         elif name == 'Rotate':
             self.level_fn = self._rotate_level_to_arg
@@ -260,11 +259,11 @@ class AutoAugmentOp(BaseTransform):
             self.level_fn = self._conversion3
         elif name in ['Color', 'Contrast', 'Brightness', 'Sharpness']:
             self.level_fn = self._enhance_level_to_arg
-        elif name == 'ShearX' or name == 'ShearY':
+        elif name in ['ShearX', 'ShearY']:
             self.level_fn = self._shear_level_to_arg
-        elif name == 'TranslateX' or name == 'TranslateY':
+        elif name in ['TranslateX', 'TranslateY']:
             self.level_fn = self._translate_abs_level_to_arg2
-        elif name == 'TranslateXRel' or name == 'TranslateYRel':
+        elif name in ['TranslateXRel', 'TranslateYRel']:
             self.level_fn = self._translate_rel_level_to_arg
         else:
             print('{} not recognized'.format({}))

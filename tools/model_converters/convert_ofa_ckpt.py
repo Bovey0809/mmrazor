@@ -12,24 +12,20 @@ def parse_args():
     parser.add_argument('--depth', nargs='+', type=int, help='layer depth')
     parser.add_argument(
         '--inplace', action='store_true', help='replace origin ckpt')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def block2layer_index_convert(layer_depth):
     """Build index_table from OFA blocks to MMRazor layers."""
     index_table = dict()
     i = 0
-    first_index = 1
     second_index = 0
-    for k in layer_depth:
+    for first_index, k in enumerate(layer_depth, start=1):
         for _ in range(k):
-            index_table[str(i)] = str(first_index) + '.' + str(second_index)
+            index_table[str(i)] = f'{str(first_index)}.{str(second_index)}'
             i += 1
             second_index += 1
         second_index = 0
-        first_index += 1
-
     return index_table
 
 
@@ -43,8 +39,7 @@ def main():
     for key, value in checkpoint['state_dict'].items():
         if 'blocks' in key:
             index = key.split('.')[1]
-            new_key = key.replace('blocks.' + index,
-                                  'layer' + index_table[index])
+            new_key = key.replace(f'blocks.{index}', f'layer{index_table[index]}')
         else:
             new_key = key
 
@@ -87,7 +82,7 @@ def main():
         if '7to5_matrix' in new_key:
             new_key = new_key.replace('7to5_matrix', 'trans_matrix_7to5')
 
-        new_key = 'architecture.backbone.' + new_key
+        new_key = f'architecture.backbone.{new_key}'
 
         if 'classifier.linear' in new_key:
             new_key = new_key.replace('classifier.linear', 'head.fc')

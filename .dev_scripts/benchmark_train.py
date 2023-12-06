@@ -76,8 +76,7 @@ def parse_args():
         choices=['reserved', 'auto', 'spot'],
         help='Quota type, only available for phoenix-slurm>=0.2')
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def replace_to_ceph(cfg):
@@ -106,8 +105,10 @@ def replace_to_ceph(cfg):
                 pipeline['file_client_args'] = file_client_args
 
         def replace_ann(pipeline):
-            if pipeline['type'] == 'LoadAnnotations' or pipeline[
-                    'type'] == 'LoadPanopticAnnotations':
+            if pipeline['type'] in [
+                'LoadAnnotations',
+                'LoadPanopticAnnotations',
+            ]:
                 pipeline['file_client_args'] = file_client_args
 
         if 'pipeline' in dataset:
@@ -233,11 +234,12 @@ def summary(args):
 
     if args.models:
         patterns = [re.compile(pattern) for pattern in args.models]
-        filter_models = {}
-        for k, v in models.items():
-            if any([re.match(pattern, k) for pattern in patterns]):
-                filter_models[k] = v
-        if len(filter_models) == 0:
+        filter_models = {
+            k: v
+            for k, v in models.items()
+            if any(re.match(pattern, k) for pattern in patterns)
+        }
+        if not filter_models:
             print('No model found, please specify models in:')
             print('\n'.join(models.keys()))
             return
@@ -249,7 +251,7 @@ def summary(args):
         work_dir = Path(args.work_dir) / model_name
         sub_dirs = [p.name for p in work_dir.iterdir() if p.is_dir()]
 
-        if len(sub_dirs) == 0:
+        if not sub_dirs:
             print(f'{model_name} has no results.')
             continue
 
@@ -285,11 +287,12 @@ def train(args):
     commands = []
     if args.models:
         patterns = [re.compile(pattern) for pattern in args.models]
-        filter_models = {}
-        for k, v in models.items():
-            if any([re.match(pattern, k) for pattern in patterns]):
-                filter_models[k] = v
-        if len(filter_models) == 0:
+        filter_models = {
+            k: v
+            for k, v in models.items()
+            if any(re.match(pattern, k) for pattern in patterns)
+        }
+        if not filter_models:
             print('No model found, please specify models in:')
             print('\n'.join(models.keys()))
             return

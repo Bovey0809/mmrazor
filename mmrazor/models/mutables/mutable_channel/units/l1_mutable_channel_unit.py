@@ -33,10 +33,7 @@ class L1MutableChannelUnit(SequentialMutableChannelUnit):
     @property
     def current_choice(self) -> Union[int, float]:
         num = self.mutable_channel.activated_channels
-        if self.is_num_mode:
-            return num
-        else:
-            return self._num2ratio(num)
+        return num if self.is_num_mode else self._num2ratio(num)
 
     @current_choice.setter
     def current_choice(self, choice: Union[int, float]):
@@ -62,8 +59,7 @@ class L1MutableChannelUnit(SequentialMutableChannelUnit):
         elif isinstance(module, nn.Linear):
             weight = module.weight  # out_c * in_c
         weight = weight[start:end]
-        norm = weight.abs().mean(dim=[1])
-        return norm
+        return weight.abs().mean(dim=[1])
 
     def _get_unit_norm(self):
         """Get l1-norm of the unit by averaging the l1-norm of the moduls in
@@ -71,9 +67,7 @@ class L1MutableChannelUnit(SequentialMutableChannelUnit):
         avg_norm = 0
         module_num = 0
         for channel in self.output_related:
-            if isinstance(channel.module,
-                          nn.modules.conv._ConvNd) or isinstance(
-                              channel.module, nn.Linear):
+            if isinstance(channel.module, (nn.modules.conv._ConvNd, nn.Linear)):
                 norm = self._get_l1_norm(channel.module, channel.start,
                                          channel.end)
                 avg_norm += norm

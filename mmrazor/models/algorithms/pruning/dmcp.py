@@ -264,10 +264,7 @@ class DMCP(BaseAlgorithm):
         elif self.flops_loss_type == 'inverted_log_l1':
             floss = -torch.log(1 / (flops_error + 1e-5))
         elif self.flops_loss_type == 'log_l1':
-            if abs(flops_error) > 200:
-                ratio = 0.1
-            else:
-                ratio = 1.0
+            ratio = 0.1 if abs(flops_error) > 200 else 1.0
             # piecewise log function
             lower_flops = self.target_flops * 0.95
             if expected_flops < lower_flops:

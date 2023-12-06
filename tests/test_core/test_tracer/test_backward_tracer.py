@@ -31,9 +31,7 @@ class MultiConcatModel(Module):
         cat1 = torch.cat([x1, x2], dim=1)
         x3 = self.op3(cat1)
         x4 = self.op4(x)
-        output = torch.cat([x3, x4], dim=1)
-
-        return output
+        return torch.cat([x3, x4], dim=1)
 
 
 class MultiConcatModel2(Module):
@@ -52,9 +50,7 @@ class MultiConcatModel2(Module):
         x3 = self.op3(x)
         cat1 = torch.cat([x1, x2], dim=1)
         cat2 = torch.cat([cat1, x3], dim=1)
-        output = self.op4(cat2)
-
-        return output
+        return self.op4(cat2)
 
 
 class MultiConcatModel3(Module):
@@ -96,8 +92,7 @@ class ResBlock(Module):
     def forward(self, x: Tensor) -> Tensor:
         x1 = self.bn1(self.op1(x))
         x2 = self.bn2(self.op2(x1))
-        x3 = self.op3(x2 + x1)
-        return x3
+        return self.op3(x2 + x1)
 
 
 class ToyCNNPseudoLoss:
@@ -126,7 +121,7 @@ class TestBackwardTracer(TestCase):
         # test path_list
         nonpass2parents = path_list.find_nodes_parents(NONPASS_NODES)
         assert len(nonpass2parents) == 3
-        assert nonpass2parents['op1'] == list()
+        assert nonpass2parents['op1'] == []
         assert nonpass2parents['op2'] == list({PathNormNode('bn1')})
         assert nonpass2parents['op3'] == list(
             {PathNormNode('bn2'), PathNormNode('bn1')})
@@ -134,7 +129,7 @@ class TestBackwardTracer(TestCase):
         nonpass2nonpassparents = path_list.find_nodes_parents(
             NONPASS_NODES, non_pass=NONPASS_NODES)
         assert len(nonpass2parents) == 3
-        assert nonpass2nonpassparents['op1'] == list()
+        assert nonpass2nonpassparents['op1'] == []
         assert nonpass2nonpassparents['op2'] == list({PathConvNode('op1')})
         assert nonpass2nonpassparents['op3'] == list(
             {PathConvNode('op2'), PathConvNode('op1')})
@@ -156,8 +151,8 @@ class TestBackwardTracer(TestCase):
 
         nonpass2parents = path_list.find_nodes_parents(NONPASS_NODES)
         assert len(nonpass2parents) == 4
-        assert nonpass2parents['op1'] == list()
-        assert nonpass2parents['op2'] == list()
+        assert nonpass2parents['op1'] == []
+        assert nonpass2parents['op2'] == []
         path_list1 = PathList(Path(PathConvNode('op1')))
         path_list2 = PathList(Path(PathConvNode('op2')))
         # only one parent
@@ -167,7 +162,7 @@ class TestBackwardTracer(TestCase):
         assert nonpass2parents['op3'][0].get_module_names() == ['op1', 'op2']
         assert nonpass2parents['op3'][0].path_lists == [path_list1, path_list2]
         assert nonpass2parents['op3'][0][0] == path_list1
-        assert nonpass2parents['op4'] == list()
+        assert nonpass2parents['op4'] == []
 
         model = MultiConcatModel2()
         tracer = BackwardTracer(loss_calculator=loss_calculator)
@@ -176,9 +171,9 @@ class TestBackwardTracer(TestCase):
 
         nonpass2parents = path_list.find_nodes_parents(NONPASS_NODES)
         assert len(nonpass2parents) == 4
-        assert nonpass2parents['op1'] == list()
-        assert nonpass2parents['op2'] == list()
-        assert nonpass2parents['op3'] == list()
+        assert nonpass2parents['op1'] == []
+        assert nonpass2parents['op2'] == []
+        assert nonpass2parents['op3'] == []
         # only one parent
         assert len(nonpass2parents['op4']) == 1
         assert isinstance(nonpass2parents['op4'][0], PathConcatNode)
@@ -192,11 +187,11 @@ class TestBackwardTracer(TestCase):
         assert len(path_list) == 1
 
         nonpass2parents = path_list.find_nodes_parents(NONPASS_NODES)
-        assert nonpass2parents['op1'] == list()
-        assert nonpass2parents['op2'] == list()
-        assert nonpass2parents['op3'] == list()
+        assert nonpass2parents['op1'] == []
+        assert nonpass2parents['op2'] == []
+        assert nonpass2parents['op3'] == []
         assert nonpass2parents['op4'] == nonpass2parents['op5'] == \
-               nonpass2parents['op6'] == nonpass2parents['op7']
+                   nonpass2parents['op6'] == nonpass2parents['op7']
 
     def test_repr(self):
         toy_node = PathConvNode('op1')

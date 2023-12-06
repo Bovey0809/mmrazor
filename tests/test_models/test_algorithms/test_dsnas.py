@@ -57,11 +57,9 @@ class ToyDiffModule(BaseModel):
             out = self.bn(self.mutable(batch_inputs))
             return dict(loss=out)
         elif mode == 'predict':
-            out = self.bn(self.mutable(batch_inputs)) + 1
-            return out
+            return self.bn(self.mutable(batch_inputs)) + 1
         elif mode == 'tensor':
-            out = self.bn(self.mutable(batch_inputs)) + 2
-            return out
+            return self.bn(self.mutable(batch_inputs)) + 2
 
 
 class TestDsnas(TestCase):

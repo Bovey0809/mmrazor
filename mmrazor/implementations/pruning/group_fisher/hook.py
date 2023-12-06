@@ -17,10 +17,7 @@ from mmrazor.utils import RuntimeInfo, print_log
 
 def get_model_from_runner(runner):
     """Get the model from a runner."""
-    if torch_dist.is_initialized():
-        return runner.model.module
-    else:
-        return runner.model
+    return runner.model.module if torch_dist.is_initialized() else runner.model
 
 
 def is_pruning_algorithm(algorithm):

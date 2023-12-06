@@ -70,7 +70,7 @@ class ChannelAnalyzer:
 
         if isinstance(demo_input, dict):
             self.demo_input = TASK_UTILS.build(demo_input)
-        elif isinstance(demo_input, list) or isinstance(demo_input, tuple):
+        elif isinstance(demo_input, (list, tuple)):
             self.demo_input = DefaultDemoInput(demo_input, False)
         elif isinstance(demo_input, BaseDemoInput):
             self.demo_input = demo_input
@@ -170,9 +170,9 @@ class ChannelAnalyzer:
                 f'{inputs}')
         mutable_units = find_mutable(model, mutable_units, units, inputs,
                                      template_output)
-        mutable_unit_config = {}
-        for unit in mutable_units:
-            mutable_unit_config[
-                unit.name] = MutableChannelUnit.config_template(
-                    unit, with_channels=True, with_init_args=True)
-        return mutable_unit_config
+        return {
+            unit.name: MutableChannelUnit.config_template(
+                unit, with_channels=True, with_init_args=True
+            )
+            for unit in mutable_units
+        }

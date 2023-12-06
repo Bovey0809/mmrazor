@@ -45,9 +45,12 @@ MUTATOR_CFG = dict(
     channel_unit_cfg=dict(
         type='OneShotMutableChannelUnit',
         default_args=dict(
-            candidate_choices=list(i / 12 for i in range(2, 13)),
-            choice_mode='ratio')),
-    parse_cfg=dict(type='ChannelAnalyzer'))
+            candidate_choices=[i / 12 for i in range(2, 13)],
+            choice_mode='ratio',
+        ),
+    ),
+    parse_cfg=dict(type='ChannelAnalyzer'),
+)
 
 DISTILLER_CFG = dict(
     type='ConfigurableDistiller',
@@ -124,7 +127,7 @@ class TestAutoSlim(TestCase):
         algo = self.prepare_model()
         self.assertSequenceEqual(
             algo.mutator.mutable_units[0].candidate_choices,
-            list(i / 12 for i in range(2, 13)),
+            [i / 12 for i in range(2, 13)],
         )
 
     def test_autoslim_train_step(self) -> None:
@@ -140,11 +143,11 @@ class TestAutoSlim(TestCase):
         assert len(losses) == 7
         assert losses['max_subnet.loss'] > 0
         assert losses['min_subnet.loss'] > 0
-        assert losses['min_subnet.loss_kl'] + 1e-5 > 0
+        assert losses['min_subnet.loss_kl'] > 0 - 1e-5
         assert losses['random0_subnet.loss'] > 0
-        assert losses['random0_subnet.loss_kl'] + 1e-5 > 0
+        assert losses['random0_subnet.loss_kl'] > 0 - 1e-5
         assert losses['random1_subnet.loss'] > 0
-        assert losses['random1_subnet.loss_kl'] + 1e-5 > 0
+        assert losses['random1_subnet.loss_kl'] > 0 - 1e-5
 
         assert algo._optim_wrapper_count_status_reinitialized
         assert optim_wrapper._inner_count == 4

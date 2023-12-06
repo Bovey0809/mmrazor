@@ -132,7 +132,7 @@ class DMCPChannelMutator(ChannelMutator[DMCPChannelUnit]):
         """
         arch_param = self.arch_params[str(group_id)]
         (group_size, num_groups, min_ch) =\
-            self._arch_params_attr[str(group_id)]
+                self._arch_params_attr[str(group_id)]
 
         if mode == 'max':
             return min_ch + group_size * num_groups
@@ -154,9 +154,7 @@ class DMCPChannelMutator(ChannelMutator[DMCPChannelUnit]):
                 return direct_channel
             elif mode == 'expected':
                 marginal_prob = torch.cumprod(condition_prob, dim=0)
-                expected_channel = (torch.sum(marginal_prob) *
-                                    group_size) + min_ch
-                return expected_channel
+                return (torch.sum(marginal_prob) * group_size) + min_ch
             else:
                 raise NotImplementedError
 

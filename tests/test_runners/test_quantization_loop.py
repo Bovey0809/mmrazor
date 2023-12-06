@@ -89,13 +89,11 @@ class ToyModel(BaseModel):
             data_sample = torch.stack(data_sample)
         outputs = self.architecture(inputs)
 
-        if mode == 'tensor':
+        if mode == 'tensor' or mode != 'loss' and mode == 'predict':
             return outputs
         elif mode == 'loss':
             loss = data_sample.sum() - outputs.sum()
             outputs = dict(loss=loss)
-            return outputs
-        elif mode == 'predict':
             return outputs
 
 

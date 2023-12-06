@@ -332,11 +332,10 @@ class MMArchitectureQuant(BaseAlgorithm):
                 mode: str = 'tensor') -> ForwardResults:
         """Forward with qmodels in quantization."""
 
-        if mode in self.qmodels:
-            qmodel = self.qmodels[mode]
-            return qmodel(inputs, data_samples, mode)
-        else:
+        if mode not in self.qmodels:
             return self.architecture(inputs, data_samples, mode)
+        qmodel = self.qmodels[mode]
+        return qmodel(inputs, data_samples, mode)
 
     def calibrate_step(self, data: Union[Dict, Tuple, List]):
         """PTQ method need calibrate by cali data."""

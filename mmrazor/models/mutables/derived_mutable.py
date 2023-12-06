@@ -146,9 +146,7 @@ class DerivedMethodMixin:
             expand_ratio: Union[int, BaseMutable, float]) -> 'DerivedMutable':
         """Derive expand mutable, usually used with `expand_ratio`."""
         # avoid circular import
-        if isinstance(expand_ratio, int):
-            choice_fn = _expand_choice_fn(self, expand_ratio=expand_ratio)
-        elif isinstance(expand_ratio, float):
+        if isinstance(expand_ratio, (int, float)):
             choice_fn = _expand_choice_fn(self, expand_ratio=expand_ratio)
         elif isinstance(expand_ratio, BaseMutable):
             current_ratio = expand_ratio.current_choice
@@ -159,9 +157,7 @@ class DerivedMethodMixin:
 
         mask_fn: Optional[Callable] = None
         if hasattr(self, 'current_mask'):
-            if isinstance(expand_ratio, int):
-                mask_fn = _expand_mask_fn(self, expand_ratio=expand_ratio)
-            elif isinstance(expand_ratio, float):
+            if isinstance(expand_ratio, (int, float)):
                 mask_fn = _expand_mask_fn(self, expand_ratio=expand_ratio)
             elif isinstance(expand_ratio, BaseMutable):
                 mask_fn = _expand_mask_fn(self, expand_ratio=current_ratio)
@@ -335,7 +331,7 @@ class DerivedMutable(BaseMutable, DerivedMethodMixin):
 
         product_choices = product(*all_choices)
 
-        derived_choices = list()
+        derived_choices = []
         for item_choices in product_choices:
             for m, choice in zip(self.source_mutables, item_choices):
                 m.current_choice = choice

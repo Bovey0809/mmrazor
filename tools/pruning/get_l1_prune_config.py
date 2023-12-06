@@ -28,8 +28,7 @@ def parse_args():
         type=str,
         default='./prune.py',
         help='output path to store the pruning config.')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def wrap_prune_config(config: Config, prune_target: Dict,

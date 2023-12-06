@@ -39,7 +39,7 @@ class DCFFChannelMutator(ChannelMutator[DCFFChannelUnit]):
             tau (float): temporature calculated by iter or epoch
         """
         # Calculate the filter importance of the current epoch.
-        for layerid, unit in enumerate(self.units):
+        for unit in self.units:
             for channel in unit.output_related:
                 if isinstance(channel.module, FuseConv2d):
                     layeri_softmaxp = channel.module.get_pooled_channel(tau)

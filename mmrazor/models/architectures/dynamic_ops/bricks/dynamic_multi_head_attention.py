@@ -225,11 +225,10 @@ class DynamicMultiheadAttention(MultiheadAttention, DynamicChannelMixin):
     @classmethod
     def convert_from(cls, module):
         """Convert the static module to dynamic one."""
-        dynamic_mha = cls(
+        return cls(
             embed_dims=module.embed_dims,
             num_heads=module.num_heads,
         )
-        return dynamic_mha
 
     def static_op_factory(self):
         """Corresponding Pytorch OP."""

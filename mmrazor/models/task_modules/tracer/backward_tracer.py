@@ -114,7 +114,7 @@ class BackwardTracer:
         shared module will be visited more than once during forward, so it is
         still need to be traced even if it has been visited.
         """
-        self._shared_module_hook_handles = list()
+        self._shared_module_hook_handles = []
         for module in model.modules():
             if hasattr(module, 'weight'):
                 # trace shared modules
@@ -158,7 +158,7 @@ class BackwardTracer:
     def _find_share_modules(model):
         """Find shared modules which will be visited more than once during
         forward such as shared detection head in RetinaNet."""
-        share_modules = list()
+        share_modules = []
         for name, module in model.named_modules():
             if hasattr(module, 'weight'):
                 if module._cnt > 1:

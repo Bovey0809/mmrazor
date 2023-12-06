@@ -25,7 +25,7 @@ def find_latest_checkpoint(path, suffix='pth'):
         return osp.join(path, f'latest.{suffix}')
 
     checkpoints = glob.glob(osp.join(path, f'*.{suffix}'))
-    if len(checkpoints) == 0:
+    if not checkpoints:
         warnings.warn('There are no checkpoints in the path.')
         return None
     latest = -1

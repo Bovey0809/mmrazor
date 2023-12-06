@@ -46,7 +46,7 @@ class TestPruneDeploySubModel(TestCase):
             list(strucutrue.values()),
             list(get_model_structure(wrapper).values()))
 
-        mutable_path = os.path.dirname(__file__) + '/mutable.json'
+        mutable_path = f'{os.path.dirname(__file__)}/mutable.json'
         fileio.dump(algorithm.mutator.current_choices, mutable_path)
         GroupFisherDeploySubModel(
             copy.deepcopy(model),

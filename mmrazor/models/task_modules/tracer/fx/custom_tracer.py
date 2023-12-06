@@ -429,8 +429,7 @@ class CustomTracer(QuantizationTracer):
         """Judge if ``m`` is registered skipped method."""
         mods = tuple(value['mod']
                      for value in UntracedMethodRegistry.method_dict.values())
-        custom = isinstance(m, mods)
-        return custom
+        return isinstance(m, mods)
 
     def is_leaf_module(self, m: torch.nn.Module,
                        module_qualified_name: str) -> bool:
@@ -449,8 +448,7 @@ class CustomTracer(QuantizationTracer):
                 ``baz``, that module will appear with the qualified name
                 ``foo.bar.baz`` here.
         """
-        leaf = super().is_leaf_module(m, module_qualified_name)
-        return leaf
+        return super().is_leaf_module(m, module_qualified_name)
 
 
 def custom_symbolic_trace(

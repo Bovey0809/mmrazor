@@ -42,7 +42,7 @@ class CRDLoss(nn.Module):
     def forward(self, s_feats, t_feats, data_samples):
         input_data = data_samples[0]
         assert 'sample_idx' in input_data, \
-            'you should pass a dict with key `sample_idx` in mimic function.'
+                'you should pass a dict with key `sample_idx` in mimic function.'
         assert isinstance(
             input_data.sample_idx, torch.Tensor
         ), f'`sample_idx` must be a tensor, but get {type(input_data.sample_idx)}'  # noqa: E501
@@ -61,8 +61,7 @@ class CRDLoss(nn.Module):
                                      contrast_sample_idxs)
         s_loss = self.criterion_s_t(out_s)
         t_loss = self.criterion_s_t(out_t)
-        loss = s_loss + t_loss
-        return loss
+        return s_loss + t_loss
 
 
 class ContrastLoss(nn.Module):
@@ -94,9 +93,7 @@ class ContrastLoss(nn.Module):
         log_D0 = torch.div(P_neg.clone().fill_(m * Pn),
                            P_neg.add(m * Pn + self.eps)).log_()
 
-        loss = -(log_D1.sum(0) + log_D0.view(-1, 1).sum(0)) / bsz
-
-        return loss
+        return -(log_D1.sum(0) + log_D0.view(-1, 1).sum(0)) / bsz
 
 
 class ContrastMemory(nn.Module):
@@ -234,7 +231,7 @@ class AliasMethod(object):
         # Loop though and create little binary mixtures that
         # appropriately allocate the larger outcomes over the
         # overall uniform mixture.
-        while len(smaller) > 0 and len(larger) > 0:
+        while smaller and larger:
             small = smaller.pop()
             large = larger.pop()
 

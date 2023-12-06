@@ -79,7 +79,7 @@ class RecorderManager:
             for name, cfg in recorders.items():
                 recorder_cfg = copy.deepcopy(cfg)
                 recorder_type = cfg['type']
-                recorder_type_ = recorder_type + 'Recorder'
+                recorder_type_ = f'{recorder_type}Recorder'
 
                 recorder_cfg['type'] = recorder_type_
                 recorder = TASK_UTILS.build(recorder_cfg)

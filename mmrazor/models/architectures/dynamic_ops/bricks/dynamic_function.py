@@ -53,9 +53,8 @@ class DynamicInputResizer(InputResizer, DynamicResizeMixin):
             module (:obj:`mmrazor.models.architectures.InputResizer`):
             The original InputResizer module.
         """
-        dynamic_seq = cls(
+        return cls(
             interpolation_type=module._interpolation_type,
             align_corners=module._align_corners,
-            scale_factor=module._scale_factor)
-
-        return dynamic_seq
+            scale_factor=module._scale_factor,
+        )

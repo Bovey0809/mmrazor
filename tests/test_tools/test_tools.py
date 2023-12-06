@@ -25,12 +25,12 @@ class TestTools(TestCase):
         return self._config_path
 
     def _setUp(self) -> None:
-        self.workdir = os.path.dirname(__file__) + '/tmp/'
+        self.workdir = f'{os.path.dirname(__file__)}/tmp/'
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
 
     def save_to_config(self, name, content):
-        with open(self.workdir + f'/{name}', 'w') as f:
+        with open(f'{self.workdir}/{name}', 'w') as f:
             f.write(content)
 
     def test_get_channel_unit(self):
@@ -68,7 +68,6 @@ class TestTools(TestCase):
                         '-o',
                         f'{self.workdir}/prune.py',
                     ])
-                    pass
                 except Exception as e:
                     self.fail(f'{e}')
                 self.assertTrue(os.path.exists(f'{self.workdir}/prune.py'))
@@ -78,7 +77,6 @@ class TestTools(TestCase):
     def _tearDown(self) -> None:
         print('delete')
         shutil.rmtree(self.workdir)
-        pass
 
     def _get_config_path(self):
         config_paths = []

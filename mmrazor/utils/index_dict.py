@@ -43,15 +43,14 @@ class IndexDict(OrderedDict):
         """Bool: if the index has any overlap with existed indexes"""
         if super().__contains__(__o):
             return True
-        else:
-            self._assert_is_index(__o)
-            start, end = __o
-            existed = False
-            for s, e in self.keys():
-                existed = (s <= start < e or s < end < e or
-                           (s < start and end < e)) or existed
+        self._assert_is_index(__o)
+        start, end = __o
+        existed = False
+        for s, e in self.keys():
+            existed = (s <= start < e or s < end < e or
+                       (s < start and end < e)) or existed
 
-            return existed
+        return existed
 
     def _assert_is_index(self, index):
         """Assert the index is an instance of Tuple[int,int]"""

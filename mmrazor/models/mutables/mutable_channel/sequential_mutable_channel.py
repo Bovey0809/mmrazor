@@ -37,20 +37,14 @@ class SquentialMutableChannel(SimpleMutableChannel):
     def current_choice(self) -> Union[int, float]:
         """Get current choice."""
         int_choice = (self.mask == 1).sum().item()
-        if self.is_num_mode:
-            return int_choice
-        else:
-            return self._num2ratio(int_choice)
+        return int_choice if self.is_num_mode else self._num2ratio(int_choice)
 
     @current_choice.setter
     def current_choice(self, choice: Union[int, float]):
         """Set choice."""
-        if isinstance(choice, float):
-            int_choice = self._ratio2num(choice)
-        else:
-            int_choice = choice
+        int_choice = self._ratio2num(choice) if isinstance(choice, float) else choice
         self.mask.fill_(0.0)
-        self.mask[0:int_choice] = 1.0
+        self.mask[:int_choice] = 1.0
 
     @property
     def current_mask(self) -> torch.Tensor:
@@ -71,7 +65,7 @@ class SquentialMutableChannel(SimpleMutableChannel):
         return self * other
 
     def __mul__(self, other) -> DerivedMutable:
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             return self.derive_expand_mutable(other)
 
         from ..mutable_value import OneShotMutableValue
@@ -127,10 +121,7 @@ class SquentialMutableChannel(SimpleMutableChannel):
 
     def _num2ratio(self, choice: Union[int, float]) -> float:
         """Convert the a number choice to a ratio choice."""
-        if isinstance(choice, float):
-            return choice
-        else:
-            return choice / self.num_channels
+        return choice if isinstance(choice, float) else choice / self.num_channels
 
     def _ratio2num(self, choice: Union[int, float]) -> int:
         """Convert the a ratio choice to a number choice."""

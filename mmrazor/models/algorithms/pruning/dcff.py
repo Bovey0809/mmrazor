@@ -71,8 +71,7 @@ class DCFF(ItePruneAlgorithm):
         A = 2 * (t_e - t_s) * (1 + math.exp(-k * max_num)) / (
             1 - math.exp(-k * max_num))
         T = A / (1 + math.exp(-k * cur_num)) + t_s - A / 2
-        t = 1 / T
-        return t
+        return 1 / T
 
     def _legal_freq_time(self, freq_time):
         """check whether step_freq or prune_times belongs to legal range:
@@ -99,26 +98,23 @@ class DCFF(ItePruneAlgorithm):
             # step_freq based on iterations
             self.step_freq *= self._iters_per_epoch
 
-        if self._legal_freq_time(self.step_freq) ^ self._legal_freq_time(
-                self.prune_times):
-            if self._legal_freq_time(self.step_freq):
-                self.prune_times = self._max_iters // self.step_freq
-            else:
-                self.step_freq = self._max_iters // self.prune_times
-        else:
+        if not self._legal_freq_time(self.step_freq) ^ self._legal_freq_time(
+            self.prune_times
+        ):
             raise RuntimeError('One and only one of (step_freq, prune_times)'
                                'can be set to legal int.')
 
-        # config_manager move to forward.
-        # message_hub['max_epoch'] unaccessible when init
-        prune_config_manager = ItePruneConfigManager(
+        if self._legal_freq_time(self.step_freq):
+            self.prune_times = self._max_iters // self.step_freq
+        else:
+            self.step_freq = self._max_iters // self.prune_times
+        return ItePruneConfigManager(
             target_pruning_ratio,
             self.mutator.current_choices,
             self.step_freq,
             prune_times=self.prune_times,
-            linear_schedule=self.linear_schedule)
-
-        return prune_config_manager
+            linear_schedule=self.linear_schedule,
+        )
 
     def forward(self,
                 inputs: torch.Tensor,

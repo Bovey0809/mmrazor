@@ -163,15 +163,14 @@ class NasMutator(BaseMutator[MUTABLE_TYPE], GroupMixin):
                        'arch_params') and name in self.arch_params.keys():
                 arch_param = self.arch_params[name]
                 choices[name] = mutables[0].sample_choice(arch_param)
+            elif kind == 'max':
+                choices[name] = mutables[0].max_choice
+            elif kind == 'min':
+                choices[name] = mutables[0].min_choice
+            elif kind == 'random':
+                choices[name] = mutables[0].sample_choice()
             else:
-                if kind == 'max':
-                    choices[name] = mutables[0].max_choice
-                elif kind == 'min':
-                    choices[name] = mutables[0].min_choice
-                elif kind == 'random':
-                    choices[name] = mutables[0].sample_choice()
-                else:
-                    raise NotImplementedError()
+                raise NotImplementedError()
         return choices
 
     def set_choices(self, choices: Dict) -> None:

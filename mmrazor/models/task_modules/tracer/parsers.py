@@ -8,9 +8,7 @@ from .path import (Path, PathConcatNode, PathConvNode, PathDepthWiseConvNode,
 
 def _is_leaf_grad_fn(grad_fn):
     """Determine whether the current node is a leaf node."""
-    if type(grad_fn).__name__ == 'AccumulateGrad':
-        return True
-    return False
+    return type(grad_fn).__name__ == 'AccumulateGrad'
 
 
 def parse_conv(tracer, grad_fn, module2name, param2module, cur_path,
@@ -118,15 +116,15 @@ def parse_cat(tracer, grad_fn, module2name, param2module, cur_path,
         >>> # ``out`` is obtained by concatenating two tensors
     """
     parents = grad_fn.next_functions
-    concat_id = '_'.join([str(id(p)) for p in parents])
-    concat_id_list = [str(id(p)) for p in parents]
+    concat_id = '_'.join([id(p) for p in parents])
+    concat_id_list = [id(p) for p in parents]
     concat_id_list.sort()
     concat_id = '_'.join(concat_id_list)
     name = f'concat_{concat_id}'
 
     visited[name] = True
-    sub_path_lists = list()
-    for _, parent in enumerate(parents):
+    sub_path_lists = []
+    for parent in parents:
         sub_path_list = PathList()
         tracer.backward_trace(parent, module2name, param2module, Path(),
                               sub_path_list, visited, shared_module)

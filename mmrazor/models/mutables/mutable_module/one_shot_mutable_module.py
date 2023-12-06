@@ -213,9 +213,7 @@ class OneShotMutableOP(OneShotMutableModule):
         Returns:
             Tensor: the result of forward all of the ``choice`` operation.
         """
-        outputs = list()
-        for op in self._candidates.values():
-            outputs.append(op(x))
+        outputs = [op(x) for op in self._candidates.values()]
         return sum(outputs)
 
     def fix_chosen(self, chosen: str) -> None:
@@ -294,6 +292,4 @@ class OneShotProbMutableOP(OneShotMutableOP):
     def sample_choice(self) -> str:
         """Sampling with probabilities."""
         assert len(self.choice_probs) == len(self._candidates.keys())
-        choice = random.choices(
-            self.choices, weights=self.choice_probs, k=1)[0]
-        return choice
+        return random.choices(self.choices, weights=self.choice_probs, k=1)[0]

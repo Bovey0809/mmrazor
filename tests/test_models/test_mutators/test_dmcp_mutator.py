@@ -21,8 +21,7 @@ class ResBlock(Module):
     def forward(self, x: Tensor) -> Tensor:
         x1 = self.bn1(self.op1(x))
         x2 = self.bn2(self.op2(x1))
-        x3 = self.op3(x2 + x1)
-        return x3
+        return self.op3(x2 + x1)
 
 
 def test_DMCP_channel_mutator() -> None:

@@ -29,7 +29,7 @@ class BaseRecorder(metaclass=ABCMeta):
         # to the data source.
         # One data source may generate multiple records, which need to be
         # recorded through list.
-        self._data_buffer: List = list()
+        self._data_buffer: List = []
         # Before using the recorder for the first time, it needs to be
         # initialized.
         self._initialized = False
@@ -76,31 +76,30 @@ class BaseRecorder(metaclass=ABCMeta):
                 source data may have different types.
         """
         assert record_idx < len(self._data_buffer), \
-            'record_idx is illegal. The length of data_buffer is ' \
-            f'{len(self._data_buffer)}, but record_idx is ' \
-            f'{record_idx}.'
+                'record_idx is illegal. The length of data_buffer is ' \
+                f'{len(self._data_buffer)}, but record_idx is ' \
+                f'{record_idx}.'
 
         record = self._data_buffer[record_idx]
 
         if data_idx is None:
             target_data = record
-        else:
-            if isinstance(record, (list, tuple)):
-                assert data_idx < len(record), \
+        elif isinstance(record, (list, tuple)):
+            assert data_idx < len(record), \
                     'data_idx is illegal. The length of record is ' \
                     f'{len(record)}, but data_idx is {data_idx}.'
-                target_data = record[data_idx]
-            else:
-                raise TypeError('When data_idx is not None, record should be '
-                                'a list or tuple instance, but got '
-                                f'{type(record)}.')
+            target_data = record[data_idx]
+        else:
+            raise TypeError('When data_idx is not None, record should be '
+                            'a list or tuple instance, but got '
+                            f'{type(record)}.')
 
         return target_data
 
     def reset_data_buffer(self) -> None:
         """Clear data in data_buffer."""
 
-        self._data_buffer = list()
+        self._data_buffer = []
 
     def __enter__(self):
         """Enter the context manager."""

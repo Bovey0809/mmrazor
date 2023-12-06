@@ -63,9 +63,10 @@ class SeparateOptimWrapperConstructor:
 
     def __call__(self, module: nn.Module) -> OptimWrapperDict:
         """Build optimizer and return a optimizerwrapperdict."""
-        optimizers = {}
         if hasattr(module, 'module'):
             module = module.module
-        for key, constructor in self.constructors.items():
-            optimizers[key] = constructor(module._modules[key])
+        optimizers = {
+            key: constructor(module._modules[key])
+            for key, constructor in self.constructors.items()
+        }
         return OptimWrapperDict(**optimizers)

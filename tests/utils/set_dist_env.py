@@ -21,10 +21,7 @@ class SetDistEnv:
         os.environ['MASTER_PORT'] = str(self.port)
 
         # initialize the process group
-        if self.using_cuda:
-            backend = 'nccl'
-        else:
-            backend = 'gloo'
+        backend = 'nccl' if self.using_cuda else 'gloo'
         dist.init_process_group(backend, rank=0, world_size=1)
 
     def __exit__(self, exc_type, exc_value, tb):

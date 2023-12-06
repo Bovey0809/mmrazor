@@ -141,12 +141,12 @@ def build_language_loader(testloader, world_size, rank, model, batch_size=128):
     distributed_sampler = DistributedSampler(
         val_dataset, num_replicas=world_size, rank=rank, shuffle=False)
     batch_size = min(len(val_dataset) // world_size, batch_size)
-    val_dataloader = DataLoader(
+    return DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=0,
         pin_memory=True,
         drop_last=True,
-        sampler=distributed_sampler)
-    return val_dataloader
+        sampler=distributed_sampler,
+    )

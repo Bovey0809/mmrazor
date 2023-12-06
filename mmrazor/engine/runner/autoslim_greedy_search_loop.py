@@ -62,18 +62,11 @@ class AutoSlimGreedySearchLoop(TestLoop):
             estimator_cfg['type'] = 'mmrazor.ResourceEstimator'
         self.estimator = TASK_UTILS.build(estimator_cfg)
 
-        if self.runner.distributed:
-            self.model = runner.model.module
-        else:
-            self.model = runner.model
-
+        self.model = runner.model.module if self.runner.distributed else runner.model
         assert hasattr(self.model, 'mutator')
         units = self.model.mutator.mutable_units
 
-        self.candidate_choices = {}
-        for unit in units:
-            self.candidate_choices[unit.alias] = unit.candidate_choices
-
+        self.candidate_choices = {unit.alias: unit.candidate_choices for unit in units}
         self.max_subnet = {}
         for name, candidate_choices in self.candidate_choices.items():
             self.max_subnet[name] = len(candidate_choices)
@@ -158,11 +151,10 @@ class AutoSlimGreedySearchLoop(TestLoop):
         """Convert the channel bin number of a channel unit to the choice
         (ratio when choice_mode='ratio' and channel number when
         choice_mode='number')."""
-        choices = {}
-        for unit_name, bins in subnet_channel_bins.items():
-            # `bins` is in range [1, max_bins]
-            choices[unit_name] = self.candidate_choices[unit_name][bins - 1]
-        return choices
+        return {
+            unit_name: self.candidate_choices[unit_name][bins - 1]
+            for unit_name, bins in subnet_channel_bins.items()
+        }
 
     @torch.no_grad()
     def _val_subnet(self) -> Dict:
@@ -171,8 +163,7 @@ class AutoSlimGreedySearchLoop(TestLoop):
         for data_batch in self.dataloader:
             outputs = self.runner.model.val_step(data_batch)
             self.evaluator.process(data_samples=outputs, data_batch=data_batch)
-        metrics = self.evaluator.evaluate(len(self.dataloader.dataset))
-        return metrics
+        return self.evaluator.evaluate(len(self.dataloader.dataset))
 
     def _save_searcher_ckpt(self) -> None:
         """Save searcher ckpt, which is different from common ckpt.

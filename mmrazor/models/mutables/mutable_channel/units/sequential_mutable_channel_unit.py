@@ -118,10 +118,7 @@ class SequentialMutableChannelUnit(MutableChannelUnit):
         """Sample a choice in (0,1]"""
         num_choice = random.randint(1, self.num_channels)
         num_choice = self._make_divisible(num_choice)
-        if self.is_num_mode:
-            return num_choice
-        else:
-            return self._num2ratio(num_choice)
+        return num_choice if self.is_num_mode else self._num2ratio(num_choice)
 
     # private methods
     def _get_valid_int_choice(self, choice: Union[float, int]) -> int:
@@ -139,10 +136,7 @@ class SequentialMutableChannelUnit(MutableChannelUnit):
 
     def _num2ratio(self, choice: Union[int, float]) -> float:
         """Convert the a number choice to a ratio choice."""
-        if isinstance(choice, float):
-            return choice
-        else:
-            return choice / self.num_channels
+        return choice if isinstance(choice, float) else choice / self.num_channels
 
     def _ratio2num(self, choice: Union[int, float]) -> int:
         """Convert the a ratio choice to a number choice."""

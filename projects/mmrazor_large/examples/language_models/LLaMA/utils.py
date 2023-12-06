@@ -128,10 +128,7 @@ def opt_eval_fsdp(
         total_seq_len += seq_len * B
         loss_sum += neg_log_likelihood
 
-        if dist.is_initialized():
-            world_size = dist.get_world_size()
-        else:
-            world_size = 1
+        world_size = dist.get_world_size() if dist.is_initialized() else 1
         infered_batch = (i + 1) * B * world_size
 
         print_log(f'{infered_batch} / {len(dataloader.dataset)}')
@@ -162,10 +159,7 @@ def opt_infer_fsdp(
         batch = batch.to(dev)
         model(batch)[0]  # 1
 
-        if dist.is_initialized():
-            world_size = dist.get_world_size()
-        else:
-            world_size = 1
+        world_size = dist.get_world_size() if dist.is_initialized() else 1
         infered_batch = (i + 1) * B * world_size
 
         print_log(f'{infered_batch} / {len(dataloader.dataset)}')

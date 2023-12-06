@@ -23,29 +23,22 @@ class FxBaseNode(BaseNode):
     def module(self):
         """Union[Module | None]: the module the fxnode corresponding to."""
         self.val: FxNode
-        model = self.val.graph.owning_module
-        if self.val.op == 'call_module':
-            target = self.val.target
-            target = target.split('.')
-            obj = model
-            for t in target:
-                obj = getattr(obj, t)
-            return obj
-        else:
+        if self.val.op != 'call_module':
             return None
+        target = self.val.target
+        target = target.split('.')
+        model = self.val.graph.owning_module
+        obj = model
+        for t in target:
+            obj = getattr(obj, t)
+        return obj
 
     def function(self):
         """Union[Callable | Node]: the function the fxnode corresponding to."""
-        if self.is_function():
-            return self.val.target
-        else:
-            return None
+        return self.val.target if self.is_function() else None
 
     def method(self):
-        if self.is_method():
-            return self.val.target
-        else:
-            return None
+        return self.val.target if self.is_method() else None
 
     # base type
     # placeholder|call_method|call_module|call_function|get_attr|output

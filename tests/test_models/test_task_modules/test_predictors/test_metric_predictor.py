@@ -29,11 +29,9 @@ class ToyModel(BaseModel):
             out = self.bn(self.mutable(batch_inputs))
             return dict(loss=out)
         elif mode == 'predict':
-            out = self.bn(self.mutable(batch_inputs)) + 1
-            return out
+            return self.bn(self.mutable(batch_inputs)) + 1
         elif mode == 'tensor':
-            out = self.bn(self.mutable(batch_inputs)) + 2
-            return out
+            return self.bn(self.mutable(batch_inputs)) + 2
 
 
 class TestMetricPredictorWithGP(TestCase):
@@ -52,9 +50,9 @@ class TestMetricPredictorWithGP(TestCase):
         self.model = ToyModel()
 
     def generate_data(self):
-        inputs = []
-        for candidate in self.candidates:
-            inputs.append(self.predictor.model2vector(candidate))
+        inputs = [
+            self.predictor.model2vector(candidate) for candidate in self.candidates
+        ]
         inputs = np.array(inputs)
         labels = np.random.rand(3)
         return inputs, labels
@@ -92,9 +90,9 @@ class TestMetricPredictorWithCart(TestCase):
         self.model = ToyModel()
 
     def generate_data(self):
-        inputs = []
-        for candidate in self.candidates:
-            inputs.append(self.predictor.model2vector(candidate))
+        inputs = [
+            self.predictor.model2vector(candidate) for candidate in self.candidates
+        ]
         inputs = np.array(inputs)
         labels = np.random.rand(3)
         return inputs, labels
@@ -132,9 +130,9 @@ class TestMetricPredictorWithRBF(TestCase):
         self.model = ToyModel()
 
     def generate_data(self):
-        inputs = []
-        for candidate in self.candidates:
-            inputs.append(self.predictor.model2vector(candidate))
+        inputs = [
+            self.predictor.model2vector(candidate) for candidate in self.candidates
+        ]
         inputs = np.array(inputs)
         labels = np.random.rand(3)
         return inputs, labels
@@ -172,9 +170,9 @@ class TestMetricPredictorWithMLP(TestCase):
         self.model = ToyModel()
 
     def generate_data(self):
-        inputs = []
-        for candidate in self.candidates:
-            inputs.append(self.predictor.model2vector(candidate))
+        inputs = [
+            self.predictor.model2vector(candidate) for candidate in self.candidates
+        ]
         inputs = np.array(inputs)
         labels = np.random.rand(3)
         return inputs, labels

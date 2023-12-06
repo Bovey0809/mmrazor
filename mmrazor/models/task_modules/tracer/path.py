@@ -10,8 +10,7 @@ def _addindent(s_, numSpaces):
     first = s.pop(0)
     s = [(numSpaces * ' ') + line for line in s]
     s = '\n'.join(s)
-    s = first + '\n' + s
-    return s
+    return first + '\n' + s
 
 
 def _merge_node_parents(node2parents, _node2parents):
@@ -49,10 +48,7 @@ class PathNode:
         return self.__class__.__name__
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.name == other.name
-        else:
-            return False
+        return self.name == other.name if isinstance(other, self.__class__) else False
 
     def __hash__(self):
         return hash(self.name)
@@ -94,7 +90,7 @@ class Path:
 
     def __init__(self,
                  nodes: Optional[Union[PathNode, List[PathNode]]] = None):
-        self._nodes: List[PathNode] = list()
+        self._nodes: List[PathNode] = []
         if nodes is not None:
             if isinstance(nodes, PathNode):
                 nodes = [nodes]
@@ -128,7 +124,7 @@ class Path:
                 continue
 
             if isinstance(node, target_nodes):
-                parents = list()
+                parents = []
                 for behind_node in self._nodes[i + 1:]:
                     if non_pass is None or isinstance(behind_node, non_pass):
                         parents.append(behind_node)
@@ -165,8 +161,7 @@ class Path:
         return self._nodes[item]
 
     def __iter__(self):
-        for node in self._nodes:
-            yield node
+        yield from self._nodes
 
     def _get_class_name(self) -> str:
         """Get the name of the current class."""
@@ -178,10 +173,8 @@ class Path:
             node_str = repr(node)
             node_str = _addindent(node_str, 2)
             child_lines.append(node_str)
-        lines = child_lines
-
-        main_str = self._get_class_name() + '('
-        if lines:
+        main_str = f'{self._get_class_name()}('
+        if lines := child_lines:
             main_str += '\n  ' + ',\n  '.join(lines) + '\n'
         main_str += ')'
         return main_str
@@ -197,7 +190,7 @@ class PathList:
     """
 
     def __init__(self, paths: Optional[Union[Path, List[Path]]] = None):
-        self._paths = list()
+        self._paths = []
         if paths is not None:
             if isinstance(paths, Path):
                 paths = [paths]
@@ -258,8 +251,7 @@ class PathList:
         return self._paths[item]
 
     def __iter__(self):
-        for path in self._paths:
-            yield path
+        yield from self._paths
 
     def _get_class_name(self) -> str:
         """Get the name of the current class."""
@@ -271,10 +263,8 @@ class PathList:
             node_str = repr(node)
             node_str = _addindent(node_str, 2)
             child_lines.append(node_str)
-        lines = child_lines
-
-        main_str = self._get_class_name() + '('
-        if lines:
+        main_str = f'{self._get_class_name()}('
+        if lines := child_lines:
             main_str += '\n  ' + ',\n  '.join(lines) + '\n'
         main_str += ')'
         return main_str
@@ -293,7 +283,7 @@ class PathConcatNode(PathNode):
 
     def __init__(self, name: str, path_lists: List[PathList]):
         super().__init__(name)
-        self._path_lists = list()
+        self._path_lists = []
         for path_list in path_lists:
             assert isinstance(path_list, PathList)
             self._path_lists.append(path_list)
@@ -303,7 +293,7 @@ class PathConcatNode(PathNode):
 
         Get the names of these nodes.
         """
-        module_names = list()
+        module_names = []
         for path_list in self._path_lists:
             module_names.extend(path_list.get_root_names())
         return module_names
@@ -337,8 +327,7 @@ class PathConcatNode(PathNode):
         return self._path_lists[item]
 
     def __iter__(self):
-        for path_list in self._path_lists:
-            yield path_list
+        yield from self._path_lists
 
     def _get_class_name(self) -> str:
         """Get the name of the current class."""
@@ -350,10 +339,8 @@ class PathConcatNode(PathNode):
             node_str = repr(node)
             node_str = _addindent(node_str, 2)
             child_lines.append(node_str)
-        lines = child_lines
-
-        main_str = self._get_class_name() + '('
-        if lines:
+        main_str = f'{self._get_class_name()}('
+        if lines := child_lines:
             main_str += '\n  ' + ',\n  '.join(lines) + '\n'
         main_str += ')'
         return main_str

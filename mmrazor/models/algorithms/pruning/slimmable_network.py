@@ -52,10 +52,7 @@ class SlimmableNetwork(BaseAlgorithm):
                  init_cfg: Optional[Dict] = None) -> None:
         super().__init__(architecture, data_preprocessor, init_cfg)
 
-        if isinstance(mutator, dict):
-            self.mutator = MODELS.build(mutator)
-        else:
-            self.mutator = mutator
+        self.mutator = MODELS.build(mutator) if isinstance(mutator, dict) else mutator
         self.mutator.prepare_from_supernet(self.architecture)
         self.num_subnet = len(self.mutator.subnets)
 

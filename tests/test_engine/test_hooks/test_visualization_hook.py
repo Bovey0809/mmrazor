@@ -44,8 +44,7 @@ class ToyModel(BaseModel):
                 inputs: torch.Tensor,
                 data_samples: Optional[list] = None,
                 mode: str = 'tensor'):
-        out = self.op(inputs)
-        return out
+        return self.op(inputs)
 
 
 class TestVisualizationHook(TestCase):
@@ -77,7 +76,7 @@ class TestVisualizationHook(TestCase):
 
     def test_before_train(self):
         timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
-        out_dir = timestamp + '1'
+        out_dir = f'{timestamp}1'
         self.runner.work_dir = timestamp
         self.runner.timestamp = '1'
         self.runner.epoch = 0
@@ -99,7 +98,7 @@ class TestVisualizationHook(TestCase):
 
     def test_after_train_epoch(self):
         timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
-        out_dir = timestamp + '1'
+        out_dir = f'{timestamp}1'
         self.runner.work_dir = timestamp
         self.runner.timestamp = '1'
 

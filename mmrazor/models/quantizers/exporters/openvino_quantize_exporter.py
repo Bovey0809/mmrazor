@@ -42,14 +42,14 @@ class OpenVinoQuantizeExportor(BaseQuantizeExportor):
         # Create a node (FakeQuantize)
         keys = ['input_min', 'input_max', 'output_min', 'output_max']
         input_names = [f'{tensor_name}_{key}' for key in keys]
-        backend_node = helper.make_node(
+        return helper.make_node(
             'FakeQuantize',  # node name
             [tensor_name, *input_names],  # inputs
             [output_name],  # outputs
             levels=levels,  # Attributes
             domain='org.openvinotoolkit',
-            name=node.name)
-        return backend_node
+            name=node.name,
+        )
 
     def _build_backend_initializer(self,
                                    names: RepeatedScalarFieldContainer[str],
@@ -79,7 +79,7 @@ class OpenVinoQuantizeExportor(BaseQuantizeExportor):
         input_low = input_low.astype(np.float32)
         input_high = input_high.astype(np.float32)
 
-        initializers = list()
+        initializers = []
         for init_name, value_tensor in zip(
                 names, [input_low, input_high, input_low, input_high]):
             init = numpy_helper.from_array(value_tensor)
@@ -90,8 +90,8 @@ class OpenVinoQuantizeExportor(BaseQuantizeExportor):
     def build_backend_nodes_and_initializers(self, symbolic_nodes: List):
         """Build new onnx nodes and initializers which can be deployed to
         specific backend."""
-        backend_nodes = list()
-        backend_initializers = list()
+        backend_nodes = []
+        backend_initializers = []
         for node in symbolic_nodes:
             tensor_name, scale, zero_point, qmin, qmax = self.parse_qparams(
                 node)

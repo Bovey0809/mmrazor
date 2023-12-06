@@ -106,7 +106,7 @@ class ModuleNode(BaseNode):
                 if self.val.groups == 1:
                     return 'conv2d'
                 elif self.val.groups == self.val.in_channels == \
-                        self.val.out_channels:
+                            self.val.out_channels:
                     return 'dwconv2d'
                 else:
                     return 'gwconv2d'
@@ -116,13 +116,12 @@ class ModuleNode(BaseNode):
                 return 'linear'
             else:
                 raise NotImplementedError(f'{self.val}')
-        else:
-            if self.val in [
+        elif self.val in [
                     'cat_placeholder', 'bind_placeholder', 'pass_placeholder'
             ]:
-                return self.val
-            else:
-                raise NotImplementedError()
+            return self.val
+        else:
+            raise NotImplementedError()
 
     def is_pass_node(self):
         """pass node represent a module whose in-channels correspond out-
@@ -199,10 +198,7 @@ class ModuleGraph(BaseGraph[MODULENODE]):
     # others
     def refresh_module_name(self):
         """Refresh the module name."""
-        module2name = {}
-        for name, module in self._model.named_modules():
-            module2name[module] = name
-
+        module2name = {module: name for name, module in self._model.named_modules()}
         for node in self:
             if isinstance(node.val, nn.Module):
                 node.module_name = module2name[node.val]
@@ -219,21 +215,20 @@ class ModuleGraph(BaseGraph[MODULENODE]):
         except Exception as e:
             if not fix:
                 raise e
-            else:
-                try:
-                    raise e
-                except NoOutputError as e:
-                    print_log(
-                        f'add a output after {node}, error: {e}',
-                        level='debug')
-                    self._add_output_after(node)
-                except NoInputError as e:
-                    print_log(
-                        f'add a input before {node}, error: {e}',
-                        level='debug')
-                    self._add_input_before(node)
+            try:
+                raise e
+            except NoOutputError as e:
+                print_log(
+                    f'add a output after {node}, error: {e}',
+                    level='debug')
+                self._add_output_after(node)
+            except NoInputError as e:
+                print_log(
+                    f'add a input before {node}, error: {e}',
+                    level='debug')
+                self._add_input_before(node)
 
-                self._check(node, fix=True)
+            self._check(node, fix=True)
 
     def _add_input_before(self, node):
         """Add an input node before a node."""
@@ -266,22 +261,18 @@ class GraphConverter:
 
     def _new_placeholder_node(self, type: str, expand_ratio=1):
         """New cat/bind/pass node."""
-        assert type in [
-            'cat_placeholder', 'pass_placeholder', 'bind_placeholder'
-        ]
+        assert type in {'cat_placeholder', 'pass_placeholder', 'bind_placeholder'}
         if expand_ratio != 1:
             assert type == 'pass_placeholder'
-        if type == 'cat_placeholder':
+        if type == 'bind_placeholder':
+            num = self.bind_placeholder_num
+            self.bind_placeholder_num += 1
+        elif type == 'cat_placeholder':
             num = self.cat_placeholder_num
             self.cat_placeholder_num += 1
         elif type == 'pass_placeholder':
             num = self.pass_placeholder_num
             self.pass_placeholder_num += 1
-        elif type == 'bind_placeholder':
-            num = self.bind_placeholder_num
-            self.bind_placeholder_num += 1
-        else:
-            pass
         node = ModuleNode(f'{type}_{num}', type)
         self.graph.add_or_find_node(node)
         return node
@@ -302,9 +293,9 @@ class GraphConverter:
 
         need_bind_nodes = []
         for node in self.graph:
-            if (isinstance(node.val, nn.Conv2d)
-                    or isinstance(node.val, nn.Linear)
-                    or isinstance(node.val, nn.modules.batchnorm._BatchNorm)):
+            if isinstance(
+                node.val, (nn.Conv2d, nn.Linear, nn.modules.batchnorm._BatchNorm)
+            ):
                 if len(node.prev_nodes) > 1:
                     need_bind_nodes.append(node)
         for node in need_bind_nodes:
@@ -354,8 +345,6 @@ class GraphConverter:
             elif node.is_bind_node():
                 node.name = f'bind_{self.bind_placeholder_num}'
                 self.bind_placeholder_num += 1
-            else:
-                pass
             sorted_nodes[node.name] = node
         self.graph.nodes = sorted_nodes
 
@@ -453,11 +442,10 @@ class PathToGraphConverter(GraphConverter):
         """
         if isinstance(pathnode, PathConcatNode):
             return self._add_or_find_cat_node(pathnode)
-        else:
-            name = pathnode.name
-            assert name in self.name2module, f"{name} doesn't exist in model"
-            module = self.name2module[name]
-            return self.graph.add_or_find_node(ModuleNode(name, module))
+        name = pathnode.name
+        assert name in self.name2module, f"{name} doesn't exist in model"
+        module = self.name2module[name]
+        return self.graph.add_or_find_node(ModuleNode(name, module))
 
     def _connect_nexts(self, node, nexts: List[ModuleNode]):
         """Connext the node and the nodes in nexts."""
@@ -496,8 +484,7 @@ class FxTracerToGraphConverter(GraphConverter):
         else:
             raise NotImplementedError(f'{node} is unsupported')
 
-        new_node = ModuleNode(node.name, val)
-        return new_node
+        return ModuleNode(node.name, val)
 
     def _convert_graph(self):
         """Convert a torch-graph to a module-graph."""

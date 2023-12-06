@@ -61,12 +61,14 @@ def get_default_demo_input_class(model, scope):
             if scope == scope_name:
                 return demo_input
 
-    for module_type, demo_input in default_demo_input_class.items(  # noqa
-    ):  # noqa
-        if isinstance(model, module_type):
-            return demo_input
-    # default
-    return BaseDemoInput
+    return next(
+        (
+            demo_input
+            for module_type, demo_input in default_demo_input_class.items()  # noqa
+            if isinstance(model, module_type)
+        ),
+        BaseDemoInput,
+    )
 
 
 def defaul_demo_inputs(model, input_shape, training=False, scope=None):
@@ -74,9 +76,8 @@ def defaul_demo_inputs(model, input_shape, training=False, scope=None):
     if isinstance(model, BaseAlgorithm):
         return defaul_demo_inputs(model.architecture, input_shape, training,
                                   scope)
-    else:
-        demo_input = get_default_demo_input_class(model, scope)
-        return demo_input().get_data(model, input_shape, training)
+    demo_input = get_default_demo_input_class(model, scope)
+    return demo_input().get_data(model, input_shape, training)
 
 
 @TASK_UTILS.register_module()

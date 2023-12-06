@@ -57,7 +57,7 @@ class DMCPSubnetHook(Hook):
         for i in range(num_sample + 1):
             cur_flops = target_flops * 10
             while cur_flops > target_flops * 1.05 or \
-                    cur_flops < target_flops * 0.95:
+                        cur_flops < target_flops * 0.95:
                 model.set_subnet(mode='direct', arch_train=False)
                 cur_flops = model.calc_current_flops()
 
@@ -67,8 +67,7 @@ class DMCPSubnetHook(Hook):
                 runner.logger.info(
                     f'Excepted sample(ES) arch with FlOP(MB):{cur_flops}')
             else:
-                save_path = os.path.join(root_dir,
-                                         'subnet_{}.json'.format(i + 1))
+                save_path = os.path.join(root_dir, f'subnet_{i + 1}.json')
                 runner.logger.info(
                     f'Driect sample(DS) arch with FlOP(MB): {cur_flops/1e6}')
             self._save_subnet(model, runner, save_path)

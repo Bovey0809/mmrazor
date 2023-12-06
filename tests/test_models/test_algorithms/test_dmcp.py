@@ -115,11 +115,11 @@ class TestDMCP(TestCase):
         assert len(losses) == 9
         assert losses['max_subnet1.loss'] > 0
         assert losses['min_subnet1.loss'] > 0
-        assert losses['min_subnet1.loss_kl'] + 1e-5 > 0
+        assert losses['min_subnet1.loss_kl'] > 0 - 1e-5
         assert losses['direct_subnet1.loss'] > 0
-        assert losses['direct_subnet1.loss_kl'] + 1e-5 > 0
+        assert losses['direct_subnet1.loss_kl'] > 0 - 1e-5
         assert losses['direct_subnet2.loss'] > 0
-        assert losses['direct_subnet2.loss_kl'] + 1e-5 > 0
+        assert losses['direct_subnet2.loss_kl'] > 0 - 1e-5
         assert losses['arch.loss'] > 0
         assert losses['flops.loss'] > 0
 

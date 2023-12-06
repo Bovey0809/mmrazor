@@ -41,7 +41,7 @@ class OneShotMutableChannelUnit(SequentialMutableChannelUnit):
                          min_ratio)
 
         candidate_choices = copy.copy(candidate_choices)
-        if candidate_choices == []:
+        if not candidate_choices:
             candidate_choices.append(
                 self.num_channels if self.is_num_mode else 1.0)
         self.candidate_choices = self._prepare_candidate_choices(

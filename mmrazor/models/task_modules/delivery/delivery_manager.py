@@ -69,7 +69,7 @@ class DistillDeliveryManager:
                 assert isinstance(delivery_type_, str)
                 assert delivery_type_ in SUPPORT_DELIVERIES
 
-                delivery_type_ = delivery_type_ + 'Delivery'
+                delivery_type_ = f'{delivery_type_}Delivery'
                 delivery_cfg_.update(dict(type=delivery_type_))
 
                 delivery = TASK_UTILS.build(delivery_cfg_)

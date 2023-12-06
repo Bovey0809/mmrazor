@@ -67,5 +67,4 @@ class MGDConnector(BaseConnector):
                           torch.ones(1).to(device)).to(device)
 
         masked_fea = torch.mul(feature, mat)
-        new_fea = self.generation(masked_fea)
-        return new_fea
+        return self.generation(masked_fea)

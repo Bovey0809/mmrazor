@@ -33,7 +33,7 @@ def torch_snr_error(y_pred: torch.Tensor,
         raise ValueError(
             f'Can not compute snr loss for tensors with different shape. '
             f'({y_pred.shape} and {y_real.shape})')
-    reduction = str(reduction).lower()
+    reduction = reduction.lower()
 
     if y_pred.ndim == 1:
         y_pred = y_pred.unsqueeze(0)
@@ -48,9 +48,9 @@ def torch_snr_error(y_pred: torch.Tensor,
 
     if reduction == 'mean':
         return torch.mean(snr)
-    elif reduction == 'sum':
-        return torch.sum(snr)
     elif reduction == 'none':
         return snr
+    elif reduction == 'sum':
+        return torch.sum(snr)
     else:
         raise ValueError('Unsupported reduction method.')

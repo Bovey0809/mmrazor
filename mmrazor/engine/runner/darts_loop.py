@@ -134,13 +134,11 @@ class EpochMultiLoader:
 
     def __next__(self):
         """Get the next iter's data of multiple loaders."""
-        data = tuple([next(loader) for loader in self.iter_loaders])
-
-        return data
+        return tuple(next(loader) for loader in self.iter_loaders)
 
     def __len__(self):
         """Get the length of loader."""
-        return min([len(loader) for loader in self._dataloaders])
+        return min(len(loader) for loader in self._dataloaders)
 
 
 class IterMultiLoader:
@@ -165,17 +163,17 @@ class IterMultiLoader:
     def __next__(self):
         """Get the next iter's data of multiple loaders."""
         try:
-            data = tuple([next(loader) for loader in self.iter_loaders])
+            data = tuple(next(loader) for loader in self.iter_loaders)
         except StopIteration:
             self._epoch += 1
             for loader in self._dataloaders:
                 if hasattr(loader.sampler, 'set_epoch'):
                     loader.sampler.set_epoch(self._epoch)
             self.iter_loader = [iter(loader) for loader in self._dataloaders]
-            data = tuple([next(loader) for loader in self.iter_loaders])
+            data = tuple(next(loader) for loader in self.iter_loaders)
 
         return data
 
     def __len__(self):
         """Get the length of loader."""
-        return min([len(loader) for loader in self._dataloaders])
+        return min(len(loader) for loader in self._dataloaders)

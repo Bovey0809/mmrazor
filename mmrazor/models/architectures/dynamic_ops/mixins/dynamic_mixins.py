@@ -39,11 +39,10 @@ class DynamicMixin(ABC):
     def get_mutable_attr(self, attr: str) -> BaseMutable:
 
         self.check_mutable_attr_valid(attr)
-        if attr in self.attr_mappings:
-            attr_map = self.attr_mappings[attr]
-            return getattr(self.mutable_attrs, attr_map, None)  # type:ignore
-        else:
+        if attr not in self.attr_mappings:
             return getattr(self.mutable_attrs, attr, None)  # type:ignore
+        attr_map = self.attr_mappings[attr]
+        return getattr(self.mutable_attrs, attr_map, None)  # type:ignore
 
     @classmethod
     @abstractmethod
@@ -208,13 +207,11 @@ class DynamicBatchNormMixin(DynamicChannelMixin):
         else:
             return None
 
-        if 'num_features' in self.mutable_attrs:
-            out_mask = self.mutable_attrs['num_features'].current_mask.to(
-                refer_tensor.device)
-        else:
-            out_mask = torch.ones_like(refer_tensor).bool()
-
-        return out_mask
+        return (
+            self.mutable_attrs['num_features'].current_mask.to(refer_tensor.device)
+            if 'num_features' in self.mutable_attrs
+            else torch.ones_like(refer_tensor).bool()
+        )
 
     def get_dynamic_params(
         self: _BatchNorm
@@ -403,7 +400,8 @@ class DynamicLinearMixin(DynamicChannelMixin):
         static_linear = self.static_op_factory(
             in_features=in_features,
             out_features=out_features,
-            bias=True if bias is not None else False)
+            bias=bias is not None,
+        )
 
         static_linear.weight = nn.Parameter(weight)
         if bias is not None:
@@ -427,18 +425,18 @@ class DynamicResizeMixin(DynamicMixin):
         assert hasattr(self, 'mutable_attrs')
         current_shape = mutable_shape.current_choice
         shape_dim = 1 if isinstance(current_shape, int) else len(current_shape)
-        if shape_dim not in [1, 2, 3]:
+        if shape_dim in {1, 2, 3}:
+            self.mutable_attrs['shape'] = mutable_shape
+        else:
             raise ValueError('Expect shape of mutable to be 1, 2 or 3'
                              f', but got: {shape_dim}.')
 
-        self.mutable_attrs['shape'] = mutable_shape
-
     def get_dynamic_shape(self):
-        if 'shape' in self.mutable_attrs:
-            current_shape = self.mutable_attrs['shape'].current_choice
-        else:
-            current_shape = None
-        return current_shape
+        return (
+            self.mutable_attrs['shape'].current_choice
+            if 'shape' in self.mutable_attrs
+            else None
+        )
 
     def to_static_op(self) -> nn.Module:
         self.check_if_mutables_fixed()

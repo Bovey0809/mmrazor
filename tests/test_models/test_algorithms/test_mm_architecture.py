@@ -104,9 +104,7 @@ class ToyQuantModel(BaseModel):
     def forward(self, inputs, data_samples, mode: str = 'tensor'):
         if isinstance(inputs, list):
             inputs = torch.stack(inputs)
-        outputs = self.architecture(inputs)
-
-        return outputs
+        return self.architecture(inputs)
 
 
 DEPLOY_CFG = ConfigDict(

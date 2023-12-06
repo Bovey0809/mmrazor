@@ -108,8 +108,8 @@ class CRDDataset:
             if 0 < self.percent < 1:
                 n = int(len(self.cls_negative[0]) * self.percent)
                 self.cls_negative = [
-                    np.random.permutation(self.cls_negative[i])[0:n]
-                    for i in range(num_classes)  # type: ignore
+                    np.random.permutation(self.cls_negative[i])[:n]
+                    for i in range(num_classes)
                 ]
 
             self.cls_positive = np.asarray(self.cls_positive)
@@ -134,8 +134,7 @@ class CRDDataset:
             pos_idx = pos_idx[0]  # type: ignore
         else:
             raise NotImplementedError(self.sample_mode)
-        replace = True if self.neg_num > \
-            len(self.cls_negative[self.gt_labels[idx]]) else False
+        replace = self.neg_num > len(self.cls_negative[self.gt_labels[idx]])
         neg_idx = np.random.choice(
             self.cls_negative[self.gt_labels[idx]],
             self.neg_num,

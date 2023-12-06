@@ -65,13 +65,11 @@ class SlimmableChannelMutator(ChannelMutator[SlimmableChannelUnit]):
         Returns:
             List[Dict[str, int]]: config of the subnets.
         """
-        subnets: List[Dict[str, int]] = []
         num_subnets = 0
         for key in unit_cfg:
             num_subnets = len(unit_cfg[key]['init_args']['candidate_choices'])
             break
-        for _ in range(num_subnets):
-            subnets.append({})
+        subnets: List[Dict[str, int]] = [{} for _ in range(num_subnets)]
         for key in unit_cfg:
             assert num_subnets == len(
                 unit_cfg[key]['init_args']['candidate_choices'])

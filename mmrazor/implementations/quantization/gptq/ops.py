@@ -155,7 +155,7 @@ try:
         zeros_shifter = (offs_bn % infearure_per_bits) * bits
         accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
 
-        for k in range(0, num_pid_k):
+        for _ in range(0, num_pid_k):
             g_idx = tl.load(g_ptrs)
 
             # Fetch scales and zeros; these are per-outfeature and thus reused
@@ -320,7 +320,7 @@ try:
         zeros_shifter = (offs_n % infearure_per_bits) * bits
         accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_K), dtype=tl.float32)
 
-        for n in range(0, num_pid_n):
+        for _ in range(0, num_pid_n):
             # Fetch scales and zeros; these are per-outfeature and thus reused
             # in the inner loop
             scales = tl.load(scales_ptrs)  # (BLOCK_SIZE_K, BLOCK_SIZE_N,)
@@ -467,30 +467,26 @@ class TritonGPTQLinear(nn.Module, GPTQMixIn):
     @classmethod
     def convert_from(cls, module: nn.Linear, bits, groupsize):
         """Convert to cls from torch's module."""
-        new_module = cls(
+        return cls(
             bits,
             groupsize,
             weight=module.weight,
             in_features=module.in_features,
             out_features=module.out_features,
-            bias=module.bias)
-
-        return new_module
+            bias=module.bias,
+        )
 
     def forward(self, x):
         """Custom forward."""
         if torch.all(self.qweight == 0):
-            out = F.linear(x, self.weight, self.bias)
-        else:
-            # import pdb;pdb.set_trace()
-            out_shape = x.shape[:-1] + (self.out_features, )
-            out = QuantLinearFunction.apply(
-                x.reshape(-1, x.shape[-1]), self.qweight, self.scales,
-                self.qzeros, self.g_idx, self.bits, self.maxq)
-            out = out + self.bias if self.bias is not None else out
-            out = out.reshape(out_shape)
-            # import pdb;pdb.set_trace()
-        return out
+            return F.linear(x, self.weight, self.bias)
+        # import pdb;pdb.set_trace()
+        out_shape = x.shape[:-1] + (self.out_features, )
+        out = QuantLinearFunction.apply(
+            x.reshape(-1, x.shape[-1]), self.qweight, self.scales,
+            self.qzeros, self.g_idx, self.bits, self.maxq)
+        out = out + self.bias if self.bias is not None else out
+        return out.reshape(out_shape)
 
 
 class GPTQLinear(DynamicLinear, GPTQMixIn):
@@ -516,7 +512,8 @@ class GPTQLinear(DynamicLinear, GPTQMixIn):
             a_fakequant=a_fakequant,
             in_features=module.in_features,
             out_features=module.out_features,
-            bias=True if module.bias is not None else False)
+            bias=module.bias is not None,
+        )
         new_module.load_state_dict(module.state_dict(), strict=False)
 
         dtype = next(module.parameters()).dtype

@@ -15,8 +15,7 @@ def parse_args():
     parser.add_argument('--model-name', help='model(config) name', type=str)
     parser.add_argument('--timestamp', help='training timestamp', type=str)
     parser.add_argument('--out-dir', help='output dir', type=str)
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def cal_file_sha256(file_path: Union[str, Path]) -> str:
@@ -26,11 +25,8 @@ def cal_file_sha256(file_path: Union[str, Path]) -> str:
     sha256_hash = hashlib.sha256()
 
     with open(file_path, 'rb') as f:
-        block = f.read(BLOCKSIZE)
-        while block:
+        while block := f.read(BLOCKSIZE):
             sha256_hash.update(block)
-            block = f.read(BLOCKSIZE)
-
     return sha256_hash.hexdigest()
 
 

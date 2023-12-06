@@ -158,7 +158,7 @@ class ItePruneAlgorithm(BaseAlgorithm):
     def check_prune_target(self, config: Dict):
         """Check if the prune-target is supported."""
         for value in config.values():
-            assert isinstance(value, int) or isinstance(value, float)
+            assert isinstance(value, (int, float))
 
     def _init_prune_config_manager(self):
         """init prune_config_manager and check step_freq & prune_times.
@@ -175,16 +175,13 @@ class ItePruneAlgorithm(BaseAlgorithm):
             # step_freq based on iterations
             self.step_freq *= self._iters_per_epoch
 
-        # config_manager move to forward.
-        # message_hub['max_epoch'] unaccessible when init
-        prune_config_manager = ItePruneConfigManager(
+        return ItePruneConfigManager(
             target_pruning_ratio,
             self.mutator.current_choices,
             self.step_freq,
             prune_times=self.prune_times,
-            linear_schedule=self.linear_schedule)
-
-        return prune_config_manager
+            linear_schedule=self.linear_schedule,
+        )
 
     def forward(self,
                 inputs: torch.Tensor,

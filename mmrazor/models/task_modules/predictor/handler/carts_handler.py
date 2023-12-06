@@ -87,7 +87,7 @@ class CartsHandler(BaseHandler):
             feature_idx = np.arange(train_data.shape[1])
             np.random.shuffle(feature_idx)
             n_feature = np.random.randint(1, train_data.shape[1] + 1)
-            selected_feature_ids = feature_idx[0:n_feature]
+            selected_feature_ids = feature_idx[:n_feature]
             feature_record.append(selected_feature_ids)
 
             dt = DecisionTreeRegressor()

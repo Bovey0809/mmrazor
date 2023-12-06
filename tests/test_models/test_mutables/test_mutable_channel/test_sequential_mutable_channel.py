@@ -23,7 +23,7 @@ class TestSquentialMutableChannel(TestCase):
 
     def _generate_mask(self, num: int, all: int):
         mask = torch.zeros([all])
-        mask[0:num] = 1
+        mask[:num] = 1
         return mask.bool()
 
     def test_mul_float(self):

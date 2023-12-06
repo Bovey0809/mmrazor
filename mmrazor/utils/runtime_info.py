@@ -43,14 +43,12 @@ class RuntimeInfo():
 
     @classmethod
     def iter_pre_epoch(cls):
-        iter_per_epoch = math.ceil(cls.max_iters() / cls.max_epochs())
-        return iter_per_epoch
+        return math.ceil(cls.max_iters() / cls.max_epochs())
 
     @classmethod
     def config(cls):
         cfg: str = cls.get_info('cfg')
-        config = Config.fromstring(cfg, '.py')
-        return config
+        return Config.fromstring(cfg, '.py')
 
     @classmethod
     def work_dir(cls):

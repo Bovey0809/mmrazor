@@ -39,9 +39,9 @@ def _parse_attrs(node_attrs):
         elif attr.type == onnx.AttributeProto.AttributeType.STRING:
             attrs[attr.name] = str(attr.s)
         elif attr.type == onnx.AttributeProto.AttributeType.STRINGS:
-            attrs[attr.name] = tuple([str(x) for x in attr.strings])
+            attrs[attr.name] = tuple(str(x) for x in attr.strings)
         else:
-            raise Exception('ATTR Type [{}] Not Supported!'.format(attr.type))
+            raise Exception(f'ATTR Type [{attr.type}] Not Supported!')
     return attrs
 
 
@@ -107,21 +107,21 @@ class BaseQuantizeExportor():
 
     def collect_symbolic_nodes(self, onnx_model: onnx.ModelProto):
         """Collect all the fakequant nodes from a onnx model."""
-        symbolic_nodes = list()
-        for node in onnx_model.graph.node:
-            if node.op_type in ALL_FAKEQUANTIZER:
-                symbolic_nodes.append(node)
-        return symbolic_nodes
+        return [
+            node
+            for node in onnx_model.graph.node
+            if node.op_type in ALL_FAKEQUANTIZER
+        ]
 
     def _get_constant_inputs(self, node: onnx.NodeProto):
         """Get the constant input node for the current node."""
-        constant_nodes = list()
+        constant_nodes = []
         output2node = self.output2node
-        for inp in node.input:
-            if inp in output2node and output2node[inp].op_type == 'Constant':
-                cnode = output2node[inp]
-
-                constant_nodes.append(cnode)
+        constant_nodes.extend(
+            output2node[inp]
+            for inp in node.input
+            if inp in output2node and output2node[inp].op_type == 'Constant'
+        )
         return constant_nodes
 
     def _collect_symbolic_constant_inputs(self, symbolic_nodes: List):
@@ -129,7 +129,7 @@ class BaseQuantizeExportor():
         node."""
 
         collected_constant_names = set()
-        constant_inputs = list()
+        constant_inputs = []
         for node in symbolic_nodes:
             constant_inputs = self._get_constant_inputs(node)
             for constant in constant_inputs:
